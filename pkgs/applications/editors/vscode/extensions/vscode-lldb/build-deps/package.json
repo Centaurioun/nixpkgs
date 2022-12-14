@@ -3,7 +3,7 @@
   "version": "1.6.8",
   "dependencies": {
     "string-argv": "^0.3.1",
-    "yaml": "^1.10.0",
+    "yaml": "^2.1.3",
     "yauzl": "^2.10.0",
     "@types/vscode": "^1.31.0",
     "@types/node": "^8.10.50",
