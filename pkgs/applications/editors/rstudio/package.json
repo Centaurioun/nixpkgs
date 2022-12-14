@@ -59,13 +59,16 @@
     "tlite": "^0.1.9",
     "transliteration": "^2.2.0",
     "typescript": "3.8.3",
-    "zenscroll": "^4.0.2"
+    "zenscroll": "^4.0.2",
+    "@snyk/protect": "latest"
   },
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\"",
     "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'",
     "watch": "tsc --watch --noEmit --project './tsconfig.json'",
-    "generate-symbols": "ts-node tools/generate-symbols.ts"
+    "generate-symbols": "ts-node tools/generate-symbols.ts",
+    "prepare": "yarn run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "devDependencies": {
     "@types/node": "^14.0.4",
@@ -81,5 +84,6 @@
     "typescript-tslint-plugin": "^0.5.5",
     "uglify-js": "^3.7.4",
     "unzip": "^0.1.11"
-  }
+  },
+  "snyk": true
 }
