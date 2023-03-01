@@ -39,7 +39,7 @@
     "7zip-bin": "5.1.1",
     "@cliqz/adblocker-electron": "1.23.6",
     "@cliqz/adblocker-electron-preload": "1.23.6",
-    "is-svg": "4.3.2",
+    "is-svg": "4.4.0",
     "rimraf": "3.0.2"
   }
 }
