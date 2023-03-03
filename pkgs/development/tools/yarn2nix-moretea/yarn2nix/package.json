@@ -9,7 +9,9 @@
   "scripts": {
     "yarn2nix": "bin/yarn2nix.js",
     "format": "prettier-eslint --write './**/*.{js,jsx,json}'",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepare": "yarn run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "bin": {
     "yarn2nix": "bin/yarn2nix.js"
@@ -22,7 +24,8 @@
     "deep-equal": "^1.0.1",
     "docopt": "^0.6.2",
     "ramda": "^0.26.1",
-    "ssri": "^10.0.0"
+    "ssri": "^10.0.0",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
@@ -44,5 +47,6 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  }
+  },
+  "snyk": true
 }
