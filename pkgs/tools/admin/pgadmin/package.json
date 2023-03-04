@@ -161,7 +161,7 @@
     "snapsvg-cjs": "^0.0.6",
     "socket.io-client": "^4.5.0",
     "split.js": "^1.5.10",
-    "styled-components": "^5.2.1",
+    "styled-components": "^5.3.7",
     "tempusdominus-bootstrap-4": "^5.1.2",
     "tempusdominus-core": "^5.19.3",
     "valid-filename": "^2.0.1",
