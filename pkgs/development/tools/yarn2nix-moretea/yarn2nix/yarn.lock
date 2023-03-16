@@ -116,6 +116,11 @@
   dependencies:
     any-observable "^0.3.0"
 
+"@snyk/protect@^1.1119.0":
+  version "1.1119.0"
+  resolved "https://registry.yarnpkg.com/@snyk/protect/-/protect-1.1119.0.tgz#a7d8cc4733a3935e6ccc60c064aaf61e0a735024"
+  integrity sha512-GxRKXeg7Iqw5mFFVDuczTK4mVB9oqJOJsFjlJymECXS8ODHw8526K5QUOAvqmyYDZasqP6YM7UEdCmWXbUxPuQ==
+
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
