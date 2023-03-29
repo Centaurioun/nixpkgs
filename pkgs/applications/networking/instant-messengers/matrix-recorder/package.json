@@ -22,6 +22,5 @@
     "olm": "https://packages.matrix.org/npm/olm/olm-2.3.0.tgz"
   },
   "license": "MIT",
-  "optionalDependencies": {
-  }
+  "optionalDependencies": {}
 }
