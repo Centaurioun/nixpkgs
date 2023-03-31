@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "yq-go";
-  version = "4.30.8";
+  version = "4.33.1";
 
   src = fetchFromGitHub {
     owner = "mikefarah";
     repo = "yq";
     rev = "v${version}";
-    sha256 = "sha256-x0vdPi8/Iciy+22SPBpktgkQCMxd5PT674OsWaLi+Q0=";
+    hash = "sha256-Ur6Ro4i184kJKRBpF++crGOBpl9GDMdNrH4h/ftaGxo=";
   };
 
-  vendorHash = "sha256-VEVy8iVnUUpjTmCj7uIMcz0jaG9XGuxA3U02QfIwsYs=";
+  vendorHash = "sha256-o/Bn2YUXU+qKxRGFzIfhV9t1gVhfFOERAlTGHD5mxD0=";
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -32,6 +32,7 @@ buildGoModule rec {
   meta = with lib; {
     description = "Portable command-line YAML processor";
     homepage = "https://mikefarah.gitbook.io/yq/";
+    changelog = "https://github.com/mikefarah/yq/raw/v${version}/release_notes.txt";
     mainProgram = "yq";
     license = [ licenses.mit ];
     maintainers = with maintainers; [ lewo SuperSandro2000 ];
