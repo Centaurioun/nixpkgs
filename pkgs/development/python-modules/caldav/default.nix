@@ -14,7 +14,7 @@
 
 buildPythonPackage rec {
   pname = "caldav";
-  version = "1.2.0";
+  version = "1.3.6";
 
   format = "setuptools";
   disabled = pythonOlder "3.7";
@@ -23,7 +23,7 @@ buildPythonPackage rec {
     owner = "python-caldav";
     repo = pname;
     rev = "refs/tags/v${version}";
-    hash = "sha256-ibizwN4pxqzmVozVjrAPNSrmM1+8+/Qu6UnfRerrwUk=";
+    hash = "sha256-N3pY3UYxOZgZbXqqsvASej12dOtdpyEHOL10btOKm/w=";
   };
 
   propagatedBuildInputs = [
@@ -32,12 +32,12 @@ buildPythonPackage rec {
     requests
     icalendar
     recurring-ical-events
+    pytz
+    tzlocal
   ];
 
   nativeCheckInputs = [
     pytestCheckHook
-    tzlocal
-    pytz
   ];
 
   # xandikos and radicale are only optional test dependencies, not available for python3

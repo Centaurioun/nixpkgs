@@ -71,13 +71,13 @@ let
 
 in stdenv.mkDerivation rec {
   pname   = "yosys";
-  version = "0.26";
+  version = "0.33";
 
   src = fetchFromGitHub {
     owner = "YosysHQ";
     repo  = "yosys";
     rev   = "${pname}-${version}";
-    hash  = "sha256-0xV+323YTK+VhnD05SmvGv8uT4TzqA9IZ/iKl1as1Kc=";
+    hash  = "sha256-3MsWF161pqqeAbmeTlkQY6UpU4pq1WT0XXK9yciwt0M=";
   };
 
   enableParallelBuilding = true;

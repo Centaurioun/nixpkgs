@@ -91,14 +91,10 @@ rec {
     microblaze   = { bits = 32; significantByte = bigEndian;    family = "microblaze"; };
     microblazeel = { bits = 32; significantByte = littleEndian; family = "microblaze"; };
 
-    mips          = { bits = 32; significantByte = bigEndian;    family = "mips"; };
-    mipsel        = { bits = 32; significantByte = littleEndian; family = "mips"; };
-    mipsisa32r6   = { bits = 32; significantByte = bigEndian;    family = "mips"; };
-    mipsisa32r6el = { bits = 32; significantByte = littleEndian; family = "mips"; };
-    mips64        = { bits = 64; significantByte = bigEndian;    family = "mips"; };
-    mips64el      = { bits = 64; significantByte = littleEndian; family = "mips"; };
-    mipsisa64r6   = { bits = 64; significantByte = bigEndian;    family = "mips"; };
-    mipsisa64r6el = { bits = 64; significantByte = littleEndian; family = "mips"; };
+    mips     = { bits = 32; significantByte = bigEndian;    family = "mips"; };
+    mipsel   = { bits = 32; significantByte = littleEndian; family = "mips"; };
+    mips64   = { bits = 64; significantByte = bigEndian;    family = "mips"; };
+    mips64el = { bits = 64; significantByte = littleEndian; family = "mips"; };
 
     mmix     = { bits = 64; significantByte = bigEndian;    family = "mmix"; };
 
@@ -131,7 +127,9 @@ rec {
 
     or1k     = { bits = 32; significantByte = bigEndian; family = "or1k"; };
 
-    js       = { bits = 32; significantByte = littleEndian; family = "js"; };
+    loongarch64 = { bits = 64; significantByte = littleEndian; family = "loongarch"; };
+
+    javascript = { bits = 32; significantByte = littleEndian; family = "javascript"; };
   };
 
   # GNU build systems assume that older NetBSD architectures are using a.out.
@@ -182,23 +180,12 @@ rec {
     (b == armv7l && isCompatible a armv7a)
     (b == armv7l && isCompatible a armv7r)
     (b == armv7l && isCompatible a armv7m)
-    (b == armv7a && isCompatible a armv8a)
-    (b == armv7r && isCompatible a armv8a)
-    (b == armv7m && isCompatible a armv8a)
-    (b == armv7a && isCompatible a armv8r)
-    (b == armv7r && isCompatible a armv8r)
-    (b == armv7m && isCompatible a armv8r)
-    (b == armv7a && isCompatible a armv8m)
-    (b == armv7r && isCompatible a armv8m)
-    (b == armv7m && isCompatible a armv8m)
 
     # ARMv8
-    (b == armv8r && isCompatible a armv8a)
-    (b == armv8m && isCompatible a armv8a)
-
-    # XXX: not always true! Some arm64 cpus don’t support arm32 mode.
     (b == aarch64 && a == armv8a)
     (b == armv8a && isCompatible a aarch64)
+    (b == armv8r && isCompatible a armv8a)
+    (b == armv8m && isCompatible a armv8a)
 
     # PowerPC
     (b == powerpc && isCompatible a powerpc64)
@@ -234,6 +221,8 @@ rec {
   vendors = setTypes types.openVendor {
     apple = {};
     pc = {};
+    knuth = {};
+
     # Actually matters, unlocking some MinGW-w64-specific options in GCC. See
     # bottom of https://sourceforge.net/p/mingw-w64/wiki2/Unicode%20apps/
     w64 = {};

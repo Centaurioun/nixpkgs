@@ -6,17 +6,17 @@
 
 buildGoModule rec {
   pname = "influxdb_exporter";
-  version = "0.11.2";
+  version = "0.11.4";
   rev = "v${version}";
 
   src = fetchFromGitHub {
     inherit rev;
     owner = "prometheus";
     repo = "influxdb_exporter";
-    hash = "sha256-UIB6/0rYOrS/B7CFffg0lPaAhSbmk0KSEogjCundXAU=";
+    hash = "sha256-q6Pe7rw5BP1IUdokwlTqjiz2nB8+pC6u9al164EgAbM=";
   };
 
-  vendorHash = "sha256-ueE1eE0cxr7+APvIEzR26Uprx0CXN1jfNLzGVgDmJQk=";
+  vendorHash = "sha256-sU2jxmXuSN5D+btjzUU51WXWxmj+2Qqp28NQvEyIUbM=";
 
   ldflags = [
     "-s"

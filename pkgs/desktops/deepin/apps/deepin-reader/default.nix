@@ -16,26 +16,27 @@
 , libspectre
 , openjpeg
 , djvulibre
-, gtest
 , qtbase
+, gtest
 }:
 
 stdenv.mkDerivation rec {
   pname = "deepin-reader";
-  version = "5.10.28";
+  version = "6.0.2";
 
   src = fetchFromGitHub {
     owner = "linuxdeepin";
     repo = pname;
     rev = version;
-    sha256 = "sha256-0jHhsxEjBbu3ktvjX1eKnkZDwzRk9MrUSJSdYeOvWtI=";
+    hash = "sha256-69NCxa20wp/tyyGGH/FbHhZ83LECbJWAzaLRo7iYreA=";
   };
 
-  patches = [ ./use-pkg-config.diff ];
-
+  # don't use vendored htmltopdf
   postPatch = ''
-    substituteInPlace reader/{reader.pro,document/Model.cpp} htmltopdf/htmltopdf.pro 3rdparty/deepin-pdfium/src/src.pro \
-      --replace "/usr" "$out"
+    substituteInPlace deepin_reader.pro \
+      --replace "SUBDIRS += htmltopdf" " "
+    substituteInPlace reader/document/Model.cpp \
+      --replace "/usr/lib/deepin-reader/htmltopdf" "htmltopdf"
   '';
 
   nativeBuildInputs = [
@@ -47,6 +48,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     dtkwidget
+    qt5integration
     qt5platform-plugins
     dde-qt-dbus-factory
     qtwebengine
@@ -59,9 +61,8 @@ stdenv.mkDerivation rec {
     gtest
   ];
 
-  # qt5integration must be placed before qtsvg in QT_PLUGIN_PATH
-  qtWrapperArgs = [
-    "--prefix QT_PLUGIN_PATH : ${qt5integration}/${qtbase.qtPluginPrefix}"
+  qmakeFlags = [
+    "DEFINES+=VERSION=${version}"
   ];
 
   meta = with lib; {

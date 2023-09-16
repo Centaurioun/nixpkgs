@@ -11,12 +11,14 @@
 , numpy
 , optax
 , scipy
-, scikitlearn
+, scikit-learn
 }:
 
 buildPythonPackage rec {
   pname = "jaxopt";
   version = "0.5.5";
+  format = "setuptools";
+
   disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
@@ -39,7 +41,7 @@ buildPythonPackage rec {
     pytestCheckHook
     cvxpy
     optax
-    scikitlearn
+    scikit-learn
   ];
 
   pythonImportsCheck = [
@@ -48,6 +50,11 @@ buildPythonPackage rec {
     "jaxopt.linear_solve"
     "jaxopt.loss"
     "jaxopt.tree_util"
+  ];
+
+  disabledTests = [
+    # Stack frame issue
+    "test_bisect"
   ];
 
   meta = with lib; {

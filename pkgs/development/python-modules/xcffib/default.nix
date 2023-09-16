@@ -1,29 +1,36 @@
 { lib
 , buildPythonPackage
-, fetchPypi
-, xorg
 , cffi
-, six
+, fetchPypi
 , pytestCheckHook
+, pythonOlder
+, xorg
 }:
 
 buildPythonPackage rec {
-  version = "1.1.2";
   pname = "xcffib";
+  version = "1.5.0";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-Wqc6wlUUUpfMeJmhEFmEf41TDz2zhLPeOqwT+GDgS6w=";
+    hash = "sha256-qVyUZfL5e0/O3mBr0eCEB6Mt9xy3YP1Xv+U2d9tpGsw=";
   };
 
-  patchPhase = ''
+  postPatch = ''
     # Hardcode cairo library path
     sed -e 's,ffi\.dlopen(,&"${xorg.libxcb.out}/lib/" + ,' -i xcffib/__init__.py
   '';
 
-  propagatedBuildInputs = [ cffi six ];
+  propagatedNativeBuildInputs = [
+    cffi
+  ];
 
-  propagatedNativeBuildInputs = [ cffi ];
+  propagatedBuildInputs = [
+    cffi
+  ];
 
   nativeCheckInputs = [
     pytestCheckHook
@@ -31,11 +38,19 @@ buildPythonPackage rec {
     xorg.xorgserver
   ];
 
-  pythonImportsCheck = [ "xcffib" ];
+  preCheck = ''
+    # import from $out
+    rm -r xcffib
+  '';
+
+  pythonImportsCheck = [
+    "xcffib"
+  ];
 
   meta = with lib; {
     description = "A drop in replacement for xpyb, an XCB python binding";
     homepage = "https://github.com/tych0/xcffib";
+    changelog = "https://github.com/tych0/xcffib/releases/tag/v${version}";
     license = licenses.asl20;
     maintainers = with maintainers; [ kamilchm ];
   };

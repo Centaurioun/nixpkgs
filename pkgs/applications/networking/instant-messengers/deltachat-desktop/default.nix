@@ -5,35 +5,19 @@
 , buildGoModule
 , esbuild
 , fetchFromGitHub
-, fetchpatch
 , libdeltachat
 , makeDesktopItem
 , makeWrapper
-, noto-fonts-emoji
+, noto-fonts-color-emoji
 , pkg-config
 , python3
 , roboto
-, rustPlatform
 , sqlcipher
 , stdenv
 , CoreServices
 }:
 
 let
-  libdeltachat' = libdeltachat.overrideAttrs (old: rec {
-    version = "1.107.1";
-    src = fetchFromGitHub {
-      owner = "deltachat";
-      repo = "deltachat-core-rust";
-      rev = version;
-      hash = "sha256-ISAUZyFrp86ILtRrlowceBQNJ7+tbJReIAe6+u4wwQI=";
-    };
-    cargoDeps = rustPlatform.fetchCargoTarball {
-      inherit src;
-      name = "${old.pname}-${version}";
-      hash = "sha256-B4BMxiI3GhsjeD3gYrq5ZpbZ7l77ycrIMWu2sUzZiz4=";
-    };
-  });
   esbuild' = esbuild.override {
     buildGoModule = args: buildGoModule (args // rec {
       version = "0.14.54";
@@ -46,18 +30,19 @@ let
       vendorHash = "sha256-+BfxCyg0KkDQpHt/wycy/8CTG6YBA/VJvJFhhzUnSiQ=";
     });
   };
-in buildNpmPackage rec {
+in
+buildNpmPackage rec {
   pname = "deltachat-desktop";
-  version = "1.34.4";
+  version = "1.40.3";
 
   src = fetchFromGitHub {
     owner = "deltachat";
     repo = "deltachat-desktop";
     rev = "v${version}";
-    hash = "sha256-LV8/r6psUZuCEGbaH1nWlrkeNbEYG8R5O1aCxECPH1E=";
+    hash = "sha256-UVsjka/ptUiSN9aqRESdFZA3uh+FJnJot/YXWUPCJtc=";
   };
 
-  npmDepsHash = "sha256-rdZVvsyCo/6C4+gjytCCn9Qcl+chc6U+6orkcM59I8U=";
+  npmDepsHash = "sha256-r0IUQNZJEpY8VE0G/WLdygup32iQ6DxfGkvOgFi7R4k=";
 
   nativeBuildInputs = [
     makeWrapper
@@ -68,15 +53,17 @@ in buildNpmPackage rec {
   ];
 
   buildInputs = [
-    libdeltachat'
+    libdeltachat
   ] ++ lib.optionals stdenv.isDarwin [
     CoreServices
   ];
 
-  ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
-  ESBUILD_BINARY_PATH = "${esbuild'}/bin/esbuild";
-  USE_SYSTEM_LIBDELTACHAT = "true";
-  VERSION_INFO_GIT_REF = src.rev;
+  env = {
+    ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+    ESBUILD_BINARY_PATH = "${esbuild'}/bin/esbuild";
+    USE_SYSTEM_LIBDELTACHAT = "true";
+    VERSION_INFO_GIT_REF = src.rev;
+  };
 
   preBuild = ''
     rm -r node_modules/deltachat-node/node/prebuilds
@@ -98,7 +85,7 @@ in buildNpmPackage rec {
     install -D build/icon.png \
       $out/share/icons/hicolor/scalable/apps/deltachat.png
 
-    ln -sf ${noto-fonts-emoji}/share/fonts/noto/NotoColorEmoji.ttf \
+    ln -sf ${noto-fonts-color-emoji}/share/fonts/noto/NotoColorEmoji.ttf \
       $out/lib/node_modules/deltachat-desktop/html-dist/fonts/noto/emoji
     for font in $out/lib/node_modules/deltachat-desktop/html-dist/fonts/Roboto-*.ttf; do
       ln -sf ${roboto}/share/fonts/truetype/$(basename $font) \

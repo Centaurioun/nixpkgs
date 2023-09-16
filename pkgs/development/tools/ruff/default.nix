@@ -4,20 +4,27 @@
 , installShellFiles
 , stdenv
 , darwin
+  # tests
+, ruff-lsp
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "ruff";
-  version = "0.0.244";
+  version = "0.0.289";
 
   src = fetchFromGitHub {
-    owner = "charliermarsh";
+    owner = "astral-sh";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-oQBNVs7hoiXNqz5lYq5YNKHfpQ/c8LZAvNvtFqpTM2E=";
+    hash = "sha256-DBYE3UkA30bFqoTCgE7SBs25wJ6bPvY63e31LEPBK7c=";
   };
 
-  cargoSha256 = "sha256-61kypAXWfUZLfTbSp+b0gCKwuWtxAYVtKIwfVOcJ2o8=";
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "unicode_names2-0.6.0" = "sha256-eWg9+ISm/vztB0KIdjhq5il2ZnwGJQCleCYfznCI3Wg=";
+    };
+  };
 
   nativeBuildInputs = [
     installShellFiles
@@ -27,8 +34,19 @@ rustPlatform.buildRustPackage rec {
     darwin.apple_sdk.frameworks.CoreServices
   ];
 
-  # building tests fails with `undefined symbols`
-  doCheck = false;
+  cargoBuildFlags = [ "--package=ruff_cli" ];
+  cargoTestFlags = cargoBuildFlags;
+
+  preBuild = lib.optionalString (stdenv.isDarwin && stdenv.isx86_64) ''
+    # See https://github.com/jemalloc/jemalloc/issues/1997
+    # Using a value of 48 should work on both emulated and native x86_64-darwin.
+    export JEMALLOC_SYS_WITH_LG_VADDR=48
+  '';
+
+  # tests expect no colors
+  preCheck = ''
+    export NO_COLOR=1
+  '';
 
   postInstall = ''
     installShellCompletion --cmd ruff \
@@ -37,11 +55,16 @@ rustPlatform.buildRustPackage rec {
       --zsh <($out/bin/ruff generate-shell-completion zsh)
   '';
 
+  passthru.tests = {
+    inherit ruff-lsp;
+  };
+
   meta = with lib; {
     description = "An extremely fast Python linter";
-    homepage = "https://github.com/charliermarsh/ruff";
-    changelog = "https://github.com/charliermarsh/ruff/releases/tag/v${version}";
+    homepage = "https://github.com/astral-sh/ruff";
+    changelog = "https://github.com/astral-sh/ruff/releases/tag/v${version}";
     license = licenses.mit;
+    mainProgram = "ruff";
     maintainers = with maintainers; [ figsoda ];
   };
 }

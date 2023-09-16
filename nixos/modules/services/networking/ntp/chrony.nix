@@ -27,7 +27,10 @@ let
     ${cfg.extraConfig}
   '';
 
-  chronyFlags = [ "-n" "-m" "-u" "chrony" "-f" "${configFile}" ] ++ cfg.extraFlags;
+  chronyFlags =
+    [ "-n" "-u" "chrony" "-f" "${configFile}" ]
+    ++ optional cfg.enableMemoryLocking "-m"
+    ++ cfg.extraFlags;
 in
 {
   options = {
@@ -70,6 +73,15 @@ in
 
           Use "offline" to prevent polling on startup. Recommended if your
           machine boots offline or is otherwise frequently offline.
+        '';
+      };
+
+      enableMemoryLocking = mkOption {
+        type = types.bool;
+        default = config.environment.memoryAllocator.provider != "graphene-hardened";
+        defaultText = ''config.environment.memoryAllocator.provider != "graphene-hardened"'';
+        description = lib.mdDoc ''
+          Whether to add the `-m` flag to lock memory.
         '';
       };
 
@@ -203,7 +215,7 @@ in
           PrivateMounts = true;
           # System Call Filtering
           SystemCallArchitectures = "native";
-          SystemCallFilter = [ "~@cpu-emulation @debug @keyring @mount @obsolete @privileged @resources" "@clock" "@setuid" "capset" "chown" ] ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 "fchownat";
+          SystemCallFilter = [ "~@cpu-emulation @debug @keyring @mount @obsolete @privileged @resources" "@clock" "@setuid" "capset" "@chown" ];
         };
       };
   };

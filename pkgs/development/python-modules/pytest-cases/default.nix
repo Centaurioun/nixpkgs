@@ -17,7 +17,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-dFXmylelRMG/3YtWrOCMHBzkxlcqiquPG9NR3CWhC2s=";
+    hash = "sha256-dFXmylelRMG/3YtWrOCMHBzkxlcqiquPG9NR3CWhC2s=";
   };
 
   nativeBuildInputs = [
@@ -40,7 +40,7 @@ buildPythonPackage rec {
 
   # Tests have dependencies (pytest-harvest, pytest-steps) which
   # are not available in Nixpkgs. Most of the packages (decopatch,
-  # makefun, pytest-*) have circular dependecies.
+  # makefun, pytest-*) have circular dependencies.
   doCheck = false;
 
   pythonImportsCheck = [

@@ -1,40 +1,33 @@
 { lib
 , python3
 , fetchFromGitHub
-, fetchpatch
 , espeak-ng
+, tts
 }:
 
 let
   python = python3.override {
     packageOverrides = self: super: {
-      # API breakage with 0.9.0
-      # TypeError: mel() takes 0 positional arguments but 2 positional arguments (and 3 keyword-only arguments) were given
-      librosa = super.librosa.overridePythonAttrs (oldAttrs: rec {
-        version = "0.8.1";
-        src = super.fetchPypi {
-          pname = "librosa";
-          inherit version;
-          hash = "sha256-xT0F52iuSj5VOuIcLlAVKT5e+/1cEtSX8RBMtRnMprM=";
-        };
-      });
+      torch = super.torch-bin;
+      torchvision = super.torchvision-bin;
     };
   };
 in
 python.pkgs.buildPythonApplication rec {
   pname = "tts";
-  version = "0.11.1";
+  version = "0.16.0";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "coqui-ai";
     repo = "TTS";
     rev = "refs/tags/v${version}";
-    hash = "sha256-EVFFETiGbrouUsrIhMFZEex3UGCCWTI3CC4yFAcERyw=";
+    hash = "sha256-2JZyINyzy4X1DTp4ZsMLY/rCsH4JdQ8bF/3hoqtvNTU=";
   };
 
   postPatch = let
     relaxedConstraints = [
+      "bnunicodenormalizer"
       "cython"
       "gruut"
       "inflect"
@@ -43,13 +36,20 @@ python.pkgs.buildPythonApplication rec {
       "numba"
       "numpy"
       "unidic-lite"
+      "trainer"
     ];
   in ''
     sed -r -i \
       ${lib.concatStringsSep "\n" (map (package:
-        ''-e 's/${package}.*[<>=]+.*/${package}/g' \''
+        ''-e 's/${package}\s*[<>=]+.+/${package}/g' \''
       ) relaxedConstraints)}
     requirements.txt
+
+    sed -r -i \
+      ${lib.concatStringsSep "\n" (map (package:
+        ''-e 's/${package}\s*[<>=]+[^"]+/${package}/g' \''
+      ) relaxedConstraints)}
+    pyproject.toml
     # only used for notebooks and visualization
     sed -r -i -e '/umap-learn/d' requirements.txt
   '';
@@ -61,7 +61,12 @@ python.pkgs.buildPythonApplication rec {
 
   propagatedBuildInputs = with python.pkgs; [
     anyascii
+    bangla
+    bnnumerizer
+    bnunicodenormalizer
     coqpit
+    einops
+    encodec
     flask
     fsspec
     g2pkk
@@ -70,6 +75,7 @@ python.pkgs.buildPythonApplication rec {
     inflect
     jamo
     jieba
+    k-diffusion
     librosa
     matplotlib
     mecab-python3
@@ -86,6 +92,7 @@ python.pkgs.buildPythonApplication rec {
     torchaudio-bin
     tqdm
     trainer
+    transformers
     unidic-lite
     webrtcvad
   ];
@@ -98,6 +105,10 @@ python.pkgs.buildPythonApplication rec {
       ${python.pythonForBuild.interpreter} setup.py install --prefix=$out
     )
   '';
+
+  # tests get stuck when run in nixpkgs-review, tested in passthru
+  doCheck = false;
+  passthru.tests.pytest = tts.overridePythonAttrs (_: { doCheck = true; });
 
   nativeCheckInputs = with python.pkgs; [
     espeak-ng
@@ -168,7 +179,13 @@ python.pkgs.buildPythonApplication rec {
     "tests/vocoder_tests/test_multiband_melgan_train.py"
     "tests/vocoder_tests/test_melgan_train.py"
     "tests/vocoder_tests/test_wavernn_train.py"
+    # only a feed forward test, but still takes too long
+    "tests/tts_tests/test_overflow.py"
   ];
+
+  passthru = {
+    inherit python;
+  };
 
   meta = with lib; {
     homepage = "https://github.com/coqui-ai/TTS";

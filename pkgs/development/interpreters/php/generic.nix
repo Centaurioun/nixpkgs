@@ -9,7 +9,7 @@ let
     , nixosTests
     , tests
     , fetchurl
-    , makeWrapper
+    , makeBinaryWrapper
     , symlinkJoin
     , writeText
     , autoconf
@@ -85,7 +85,7 @@ let
 
           php-packages = (callPackage ../../../top-level/php-packages.nix {
             phpPackage = phpWithExtensions;
-          }).overrideScope' packageOverrides;
+          }).overrideScope packageOverrides;
 
           allExtensionFunctions = prevExtensionFunctions ++ [ extensions ];
           enabledExtensions =
@@ -141,7 +141,7 @@ let
           phpWithExtensions = symlinkJoin {
             name = "php-with-extensions-${version}";
             inherit (php) version;
-            nativeBuildInputs = [ makeWrapper ];
+            nativeBuildInputs = [ makeBinaryWrapper ];
             passthru = php.passthru // {
               buildEnv = mkBuildEnv allArgs allExtensionFunctions;
               withExtensions = mkWithExtensions allArgs allExtensionFunctions;
@@ -159,7 +159,7 @@ let
                 nixos = lib.recurseIntoAttrs nixosTests."php${lib.strings.replaceStrings [ "." ] [ "" ] (lib.versions.majorMinor php.version)}";
                 package = tests.php;
               };
-              inherit (php-packages) extensions buildPecl mkExtension;
+              inherit (php-packages) extensions buildPecl mkComposerRepository buildComposerProject composerHooks mkExtension;
               packages = php-packages.tools;
               meta = php.meta // {
                 outputsToInstall = [ "out" ];
@@ -170,19 +170,19 @@ let
               ln -s ${extraInit} $out/lib/php.ini
 
               if test -e $out/bin/php; then
-                wrapProgram $out/bin/php --set PHP_INI_SCAN_DIR $out/lib
+                wrapProgram $out/bin/php --set-default PHP_INI_SCAN_DIR $out/lib
               fi
 
               if test -e $out/bin/php-fpm; then
-                wrapProgram $out/bin/php-fpm --set PHP_INI_SCAN_DIR $out/lib
+                wrapProgram $out/bin/php-fpm --set-default PHP_INI_SCAN_DIR $out/lib
               fi
 
               if test -e $out/bin/phpdbg; then
-                wrapProgram $out/bin/phpdbg --set PHP_INI_SCAN_DIR $out/lib
+                wrapProgram $out/bin/phpdbg --set-default PHP_INI_SCAN_DIR $out/lib
               fi
 
               if test -e $out/bin/php-cgi; then
-                wrapProgram $out/bin/php-cgi --set PHP_INI_SCAN_DIR $out/lib
+                wrapProgram $out/bin/php-cgi --set-default PHP_INI_SCAN_DIR $out/lib
               fi
             '';
           };
@@ -247,8 +247,7 @@ let
             ++ lib.optional (!ipv6Support) "--disable-ipv6"
             ++ lib.optional systemdSupport "--with-fpm-systemd"
             ++ lib.optional valgrindSupport "--with-valgrind=${valgrind.dev}"
-            ++ lib.optional (ztsSupport && (lib.versionOlder version "8.0")) "--enable-maintainer-zts"
-            ++ lib.optional (ztsSupport && (lib.versionAtLeast version "8.0")) "--enable-zts"
+            ++ lib.optional ztsSupport "--enable-zts"
 
 
             # Sendmail
@@ -272,8 +271,8 @@ let
 
               ./buildconf --copy --force
 
-              if test -f $src/genfiles; then
-                ./genfiles
+              if [ -f "scripts/dev/genfiles" ]; then
+                ./scripts/dev/genfiles
               fi
             '' + lib.optionalString stdenv.isDarwin ''
               substituteInPlace configure --replace "-lstdc++" "-lc++"

@@ -1,17 +1,18 @@
 { lib, fetchFromGitHub
 , version
 , suffix ? ""
-, sha256 ? null
-, src ? fetchFromGitHub { owner = "NixOS"; repo = "nix"; rev = version; inherit sha256; }
+, hash ? null
+, src ? fetchFromGitHub { owner = "NixOS"; repo = "nix"; rev = version; inherit hash; }
 , patches ? [ ]
 }:
-assert (sha256 == null) -> (src != null);
+assert (hash == null) -> (src != null);
 let
   atLeast24 = lib.versionAtLeast version "2.4pre";
   atLeast25 = lib.versionAtLeast version "2.5pre";
   atLeast27 = lib.versionAtLeast version "2.7pre";
   atLeast210 = lib.versionAtLeast version "2.10pre";
   atLeast213 = lib.versionAtLeast version "2.13pre";
+  atLeast214 = lib.versionAtLeast version "2.14pre";
 in
 { stdenv
 , autoconf-archive
@@ -43,12 +44,19 @@ in
 , openssl
 , perl
 , pkg-config
+, rapidcheck
 , Security
 , sqlite
 , util-linuxMinimal
 , xz
 
-, enableDocumentation ? !atLeast24 || stdenv.hostPlatform == stdenv.buildPlatform
+, enableDocumentation ? !atLeast24 || (
+    (stdenv.hostPlatform == stdenv.buildPlatform) &&
+    # mdbook errors out on risc-v due to a rustc bug
+    # https://github.com/NixOS/nixpkgs/pull/242019
+    # https://github.com/rust-lang/rust/issues/114473
+    !stdenv.buildPlatform.isRiscV
+  )
 , enableStatic ? stdenv.hostPlatform.isStatic
 , withAWS ? !enableStatic && (stdenv.isLinux || stdenv.isDarwin), aws-sdk-cpp
 , withLibseccomp ? lib.meta.availableOn stdenv.hostPlatform libseccomp, libseccomp
@@ -73,6 +81,8 @@ self = stdenv.mkDerivation {
     ++ lib.optionals enableDocumentation [ "man" "doc" ];
 
   hardeningEnable = lib.optionals (!stdenv.isDarwin) [ "pie" ];
+
+  hardeningDisable = lib.optional stdenv.hostPlatform.isMusl "fortify";
 
   nativeBuildInputs = [
     pkg-config
@@ -109,6 +119,8 @@ self = stdenv.mkDerivation {
     lowdown
   ] ++ lib.optionals (atLeast24 && stdenv.isx86_64) [
     libcpuid
+  ] ++ lib.optionals atLeast214 [
+    rapidcheck
   ] ++ lib.optionals withLibseccomp [
     libseccomp
   ] ++ lib.optionals withAWS [
@@ -127,6 +139,10 @@ self = stdenv.mkDerivation {
     # https://github.com/NixOS/nix/commits/74b4737d8f0e1922ef5314a158271acf81cd79f8
     (lib.optionalString (stdenv.hostPlatform.system == "armv5tel-linux" || stdenv.hostPlatform.system == "armv6l-linux") "-latomic")
   ];
+
+  postPatch = ''
+    patchShebangs --build tests
+  '';
 
   preConfigure =
     # Copy libboost_context so we don't get all of Boost in our closure.
@@ -167,6 +183,8 @@ self = stdenv.mkDerivation {
   ] ++ lib.optionals (!atLeast24) [
     # option was removed in 2.4
     "--disable-init-state"
+  ] ++ lib.optionals atLeast214 [
+    "CXXFLAGS=-I${lib.getDev rapidcheck}/extras/gtest/include"
   ] ++ lib.optionals stdenv.isLinux [
     "--with-sandbox-shell=${busybox-sandbox-shell}/bin/busybox"
   ] ++ lib.optionals (atLeast210 && stdenv.isLinux && stdenv.hostPlatform.isStatic) [
@@ -231,6 +249,7 @@ self = stdenv.mkDerivation {
     maintainers = with maintainers; [ eelco lovesegfault artturin ];
     platforms = platforms.unix;
     outputsToInstall = [ "out" ] ++ optional enableDocumentation "man";
+    mainProgram = "nix";
   };
 };
 in self

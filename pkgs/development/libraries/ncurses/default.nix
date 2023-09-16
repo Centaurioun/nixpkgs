@@ -53,6 +53,7 @@ stdenv.mkDerivation (finalAttrs: {
   # Only the C compiler, and explicitly not C++ compiler needs this flag on solaris:
   CFLAGS = lib.optionalString stdenv.isSunOS "-D_XOPEN_SOURCE_EXTENDED";
 
+  strictDeps = true;
   depsBuildBuild = [
     buildPackages.stdenv.cc
   ];
@@ -135,6 +136,13 @@ stdenv.mkDerivation (finalAttrs: {
           fi
         done
         ln -svf ''${library}$suffix.pc $dev/lib/pkgconfig/$library$newsuffix.pc
+      done
+    done
+
+    # add pkg-config aliases for libraries that are built-in to libncurses(w)
+    for library in tinfo tic; do
+      for suffix in "" w; do
+        ln -svf ncurses$suffix.pc $dev/lib/pkgconfig/$library$suffix.pc
       done
     done
 

@@ -4,23 +4,29 @@
 , pythonOlder
 , alembic
 , flask
-, flask_script
+, flask-script
 , flask-sqlalchemy
 , pytestCheckHook
+, setuptools
 }:
 
 buildPythonPackage rec {
-  pname = "Flask-Migrate";
-  version = "4.0.2";
-  format = "setuptools";
+  pname = "flask-migrate";
+  version = "4.0.4";
+  format = "pyproject";
+
   disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "miguelgrinberg";
-    repo = pname;
+    repo = "Flask-Migrate";
     rev = "v${version}";
-    hash = "sha256-6P5oIH/mVuMy4J71VIRD1p+qbvPUlq3COpytEgKz1qo=";
+    hash = "sha256-x52LGYvXuTUCP9dR3FP7a/xNRWyCAV1sReDAYJbYDvE=";
   };
+
+  nativeBuildInputs = [
+    setuptools
+  ];
 
   propagatedBuildInputs = [
     alembic
@@ -34,7 +40,7 @@ buildPythonPackage rec {
 
   nativeCheckInputs = [
     pytestCheckHook
-    flask_script
+    flask-script
   ];
 
   meta = with lib; {

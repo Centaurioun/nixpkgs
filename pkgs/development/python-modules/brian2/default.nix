@@ -19,8 +19,14 @@ buildPythonPackage rec {
   src = fetchPypi {
     pname = "Brian2";
     inherit version;
-    sha256 = "sha256-x1EcS7PFCsjPYsq3Lt87SJRW4J5DE/OfdFs3NuyHiLw=";
+    hash = "sha256-x1EcS7PFCsjPYsq3Lt87SJRW4J5DE/OfdFs3NuyHiLw=";
   };
+
+  patches = [
+    # Fix deprecated numpy types
+    # https://sources.debian.org/data/main/b/brian/2.5.1-3/debian/patches/numpy1.24.patch
+    ./numpy1.24.patch
+  ];
 
   propagatedBuildInputs = [
     cython

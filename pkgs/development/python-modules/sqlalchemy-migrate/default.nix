@@ -4,7 +4,6 @@
 , fetchPypi
 , fetchpatch
 , python
-, pythonAtLeast
 , scripttest
 , pytz
 , pbr
@@ -25,12 +24,13 @@ buildPythonPackage rec {
     sha256 = "1y0lcqii7b4vp7yh9dyxrl4i77hi8jkkw7d06mgdw2h458ljxh0b";
   };
 
-  # See: https://review.openstack.org/#/c/608382/
   patches = [
+    # See: https://review.openstack.org/#/c/608382/
     (fetchpatch {
       url = "https://github.com/openstack/sqlalchemy-migrate/pull/18.patch";
       sha256 = "1qyfq2m7w7xqf0r9bc2x42qcra4r9k9l9g1jy5j0fvlb6bvvjj07";
     })
+    ./python3.11-comp.diff
   ];
 
   postPatch = ''
@@ -64,8 +64,6 @@ buildPythonPackage rec {
     description = "Schema migration tools for SQLAlchemy";
     license = licenses.asl20;
     maintainers = teams.openstack.members ++ (with maintainers; [ makefu ]);
-    # using deprecated inspect.getargspec function
-    # https://bugs.launchpad.net/sqlalchemy-migrate/+bug/2003619
-    broken = pythonAtLeast "3.11";
+    broken = lib.versionAtLeast sqlalchemy.version "2.0.0";
   };
 }

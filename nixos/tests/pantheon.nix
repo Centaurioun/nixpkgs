@@ -3,9 +3,7 @@ import ./make-test-python.nix ({ pkgs, lib, ...} :
 {
   name = "pantheon";
 
-  meta = with lib; {
-    maintainers = teams.pantheon.members;
-  };
+  meta.maintainers = lib.teams.pantheon.members;
 
   nodes.machine = { ... }:
 
@@ -15,6 +13,7 @@ import ./make-test-python.nix ({ pkgs, lib, ...} :
     services.xserver.enable = true;
     services.xserver.desktopManager.pantheon.enable = true;
 
+    environment.systemPackages = [ pkgs.xdotool ];
   };
 
   enableOCR = true;
@@ -29,6 +28,10 @@ import ./make-test-python.nix ({ pkgs, lib, ...} :
         machine.wait_for_text("${user.description}")
         # OCR was struggling with this one.
         # machine.wait_for_text("${bob.description}")
+        # Ensure the password box is focused by clicking it.
+        # Workaround for https://github.com/NixOS/nixpkgs/issues/211366.
+        machine.succeed("XAUTHORITY=/var/lib/lightdm/.Xauthority DISPLAY=:0 xdotool mousemove 512 505 click 1")
+        machine.sleep(2)
         machine.screenshot("elementary_greeter_lightdm")
 
     with subtest("Login with elementary-greeter"):
@@ -57,6 +60,9 @@ import ./make-test-python.nix ({ pkgs, lib, ...} :
     with subtest("Open elementary terminal"):
         machine.execute("su - ${user.name} -c 'DISPLAY=:0 io.elementary.terminal >&2 &'")
         machine.wait_for_window("io.elementary.terminal")
+
+    with subtest("Check if gala has ever coredumped"):
+        machine.fail("coredumpctl --json=short | grep gala")
         machine.sleep(20)
         machine.screenshot("screen")
   '';
