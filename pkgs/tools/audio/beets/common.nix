@@ -23,6 +23,7 @@
 
 , src
 , version
+, extraPatches ? [ ]
 , pluginOverrides ? { }
 , disableAllPlugins ? false
 
@@ -45,23 +46,20 @@ let
 
   pluginWrapperBins = concatMap (p: p.wrapperBins) (attrValues enabledPlugins);
 in
-python3Packages.buildPythonApplication rec {
+python3Packages.buildPythonApplication {
   pname = "beets";
   inherit src version;
 
-  patches = [
-    # Bash completion fix for Nix
-    ./patches/bash-completion-always-print.patch
-    (fetchpatch {
-      # Fix unidecode>=1.3.5 compat
-      url = "https://github.com/beetbox/beets/commit/5ae1e0f3c8d3a450cb39f7933aa49bb78c2bc0d9.patch";
-      hash = "sha256-gqkrE+U1j3tt1qPRJufTGS/GftaSw/gweXunO/mCVG8=";
-    })
-  ];
+  patches = extraPatches;
+
+  postPatch = ''
+    # https://github.com/beetbox/beets/pull/4868
+    substituteInPlace beets/util/artresizer.py \
+      --replace "Image.ANTIALIAS" "Image.Resampling.LANCZOS"
+  '';
 
   propagatedBuildInputs = with python3Packages; [
     confuse
-    gobject-introspection
     gst-python
     jellyfish
     mediafile
@@ -72,9 +70,9 @@ python3Packages.buildPythonApplication rec {
     pyyaml
     reflink
     unidecode
+    typing-extensions
   ] ++ (concatMap (p: p.propagatedBuildInputs) (attrValues enabledPlugins));
 
-  # see: https://github.com/NixOS/nixpkgs/issues/56943#issuecomment-1131643663
   nativeBuildInputs = [
     gobject-introspection
     sphinxHook
@@ -183,5 +181,6 @@ EOF
     license = licenses.mit;
     maintainers = with maintainers; [ aszlig doronbehar lovesegfault pjones ];
     platforms = platforms.linux;
+    mainProgram = "beet";
   };
 }

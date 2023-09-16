@@ -16,7 +16,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-bwqzyhQbUI2gPOGb1S8eXo0pdz/DBi1782RQqCIH7Bs=";
+    hash = "sha256-bwqzyhQbUI2gPOGb1S8eXo0pdz/DBi1782RQqCIH7Bs=";
   };
 
   postPatch = ''
@@ -98,7 +98,7 @@ buildPythonPackage rec {
   '';
 
   meta = with lib; {
-    broken = (stdenv.isLinux && stdenv.isAarch64) || stdenv.isDarwin;
+    broken = stdenv.isDarwin;
     description = "Scalable Python framework for cluster administration";
     homepage = "https://cea-hpc.github.io/clustershell";
     license = licenses.lgpl21;

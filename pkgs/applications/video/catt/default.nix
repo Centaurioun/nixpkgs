@@ -1,5 +1,6 @@
 { lib
 , fetchFromGitHub
+, fetchPypi
 , python3
 }:
 
@@ -21,11 +22,12 @@ let
         version = "7.1.2";
         src = oldAttrs.src.override {
           inherit version;
-          sha256 = "06kbzd6sjfkqan3miwj9wqyddfxc2b6hi7p5s4dvqjb3gif2bdfj";
+          hash = "sha256-0rUlXHxjSbwb0eWeCM0SrLvWPOZJ8liHVXg6qU37axo=";
         };
+        disabledTests = [ "test_bytes_args" ]; # https://github.com/pallets/click/commit/6e05e1fa1c2804
       });
 
-      PyChromecast = super.PyChromecast.overridePythonAttrs (oldAttrs: rec {
+      pychromecast = super.pychromecast.overridePythonAttrs (oldAttrs: rec {
         version = "9.2.0";
         src = oldAttrs.src.override {
           inherit version;
@@ -40,6 +42,7 @@ with py.pkgs;
 buildPythonApplication rec {
   pname = "catt";
   version = "0.12.7";
+  format = "setuptools";
 
   src = fetchPypi {
     inherit pname version;
@@ -49,7 +52,7 @@ buildPythonApplication rec {
   propagatedBuildInputs = [
     click
     ifaddr
-    PyChromecast
+    pychromecast
     protobuf
     requests
     yt-dlp

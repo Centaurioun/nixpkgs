@@ -1,5 +1,5 @@
 { lib
-, bazel_5
+, bazel_6
 , bazel-gazelle
 , buildBazelPackage
 , fetchFromGitHub
@@ -24,19 +24,19 @@ let
     # However, the version string is more useful for end-users.
     # These are contained in a attrset of their own to make it obvious that
     # people should update both.
-    version = "1.25.1";
-    rev = "bae2e9d642a6a8ae6c5d3810f77f3e888f0d97da";
+    version = "1.26.4";
+    rev = "cfa32deca25ac57c2bbecdad72807a9b13493fc1";
   };
 in
 buildBazelPackage rec {
   pname = "envoy";
   inherit (srcVer) version;
-  bazel = bazel_5;
+  bazel = bazel_6;
   src = fetchFromGitHub {
     owner = "envoyproxy";
     repo = "envoy";
     inherit (srcVer) rev;
-    sha256 = "sha256-qA3+bta2vXGtAYX3mg+CmSIEitk4576JQB/QLPsj9Vc=";
+    hash = "sha256-j5QyqT+9tpChg5JxdSw21rtb9AI036vIiAmzCNzGWGc=";
 
     postFetch = ''
       chmod -R +w $out
@@ -80,8 +80,8 @@ buildBazelPackage rec {
 
   fetchAttrs = {
     sha256 = {
-      x86_64-linux = "sha256-H2s8sTbmKF+yRfSzLsZAT2ckFuunFwh/FMSKj+GYyPM=";
-      aarch64-linux = "sha256-R9jzy/dpdCcGgT9yq59Wo/IN/bVo6fxnVPGhLMZ9fbM=";
+      x86_64-linux = "sha256-MvY4cLdLOeb7+Zt7Oz7Kzz1+dsUceemP/V02egvHg+M=";
+      aarch64-linux = "sha256-U5mnAq8RHDygxiYeNc0HDeOgoaGyrd0MPjHKdyUkM0A=";
     }.${stdenv.system} or (throw "unsupported system ${stdenv.system}");
     dontUseCmakeConfigure = true;
     dontUseGnConfigure = true;
@@ -97,11 +97,14 @@ buildBazelPackage rec {
         -e 's,${stdenv.shellPackage},__NIXSHELL__,' \
         $bazelOut/external/com_github_luajit_luajit/build.py \
         $bazelOut/external/local_config_sh/BUILD \
-        $bazelOut/external/base_pip3/BUILD.bazel
+        $bazelOut/external/*_pip3/BUILD.bazel
 
       rm -r $bazelOut/external/go_sdk
       rm -r $bazelOut/external/local_jdk
       rm -r $bazelOut/external/bazel_gazelle_go_repository_tools/bin
+
+      # Remove compiled python
+      find $bazelOut -name '*.pyc' -delete
 
       # Remove Unix timestamps from go cache.
       rm -rf $bazelOut/external/bazel_gazelle_go_repository_cache/{gocache,pkg/mod/cache,pkg/sumdb}
@@ -130,7 +133,7 @@ buildBazelPackage rec {
         -e 's,__NIXSHELL__,${stdenv.shellPackage},' \
         $bazelOut/external/com_github_luajit_luajit/build.py \
         $bazelOut/external/local_config_sh/BUILD \
-        $bazelOut/external/base_pip3/BUILD.bazel
+        $bazelOut/external/*_pip3/BUILD.bazel
     '';
     installPhase = ''
       install -Dm0755 bazel-bin/source/exe/envoy-static $out/bin/envoy
@@ -140,7 +143,7 @@ buildBazelPackage rec {
   removeRulesCC = false;
   removeLocalConfigCc = true;
   removeLocal = false;
-  bazelTarget = "//source/exe:envoy-static";
+  bazelTargets = [ "//source/exe:envoy-static" ];
   bazelBuildFlags = [
     "-c opt"
     "--spawn_strategy=standalone"

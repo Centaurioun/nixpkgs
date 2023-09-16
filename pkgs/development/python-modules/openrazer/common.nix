@@ -2,12 +2,13 @@
 , fetchFromGitHub
 }: rec {
   version = "3.5.1";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "openrazer";
     repo = "openrazer";
     rev = "v${version}";
-    sha256 = "sha256-6YU2tl17LpDZe9pQ1a+B2SGIhqGdwME3Db6umVz7RLc=";
+    hash = "sha256-6YU2tl17LpDZe9pQ1a+B2SGIhqGdwME3Db6umVz7RLc=";
   };
 
   meta = with lib; {

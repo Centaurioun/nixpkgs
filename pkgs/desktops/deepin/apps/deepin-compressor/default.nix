@@ -14,18 +14,19 @@
 , wrapQtAppsHook
 , minizip
 , libzip
+, libuuid
 , libarchive
 }:
 
 stdenv.mkDerivation rec {
   pname = "deepin-compressor";
-  version = "5.12.9";
+  version = "5.12.17";
 
   src = fetchFromGitHub {
     owner = "linuxdeepin";
     repo = pname;
     rev = version;
-    sha256 = "sha256-HJDtUvXUT94G4WqrK92UMmijnuC4ApkKHU3yE3rOKHQ=";
+    hash = "sha256-eg9JcuBTKoaEuoph0rvy0VRH28sFOdYWN9sGbduUwcM=";
   };
 
   postPatch = ''
@@ -44,12 +45,14 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     dtkwidget
+    qt5integration
     qt5platform-plugins
     udisks2-qt5
     kcodecs
     karchive
     minizip
     libzip
+    libuuid
     libarchive
   ];
 
@@ -58,10 +61,7 @@ stdenv.mkDerivation rec {
     "-DUSE_TEST=OFF"
   ];
 
-  # qt5integration must be placed before qtsvg in QT_PLUGIN_PATH
-  qtWrapperArgs = [
-    "--prefix QT_PLUGIN_PATH : ${qt5integration}/${qtbase.qtPluginPrefix}"
-  ];
+  strictDeps = true;
 
   meta = with lib; {
     description = "A fast and lightweight application for creating and extracting archives";

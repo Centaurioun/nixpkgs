@@ -16,7 +16,7 @@ buildPythonPackage rec {
     owner = "kwarunek";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "sha256-7lDOI1SHPpRZLTHRTmfbKlZH18T73poJdFyVmb+HKms=";
+    hash = "sha256-7lDOI1SHPpRZLTHRTmfbKlZH18T73poJdFyVmb+HKms=";
   };
 
   propagatedBuildInputs = [
@@ -38,6 +38,6 @@ buildPythonPackage rec {
     description = "Test asyncio code more easily";
     homepage = "https://github.com/kwarunek/aiounittest";
     license = licenses.mit;
-    maintainers = [ maintainers.costrouc ];
+    maintainers = [ ];
   };
 }

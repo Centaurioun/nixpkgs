@@ -1,23 +1,25 @@
-{ lib, stdenv, appimageTools, fetchurl, undmg }:
+{ lib, stdenv, appimageTools, fetchurl, makeWrapper, undmg }:
 
 let
   pname = "joplin-desktop";
-  version = "2.10.4";
+  version = "2.12.16";
   name = "${pname}-${version}";
 
   inherit (stdenv.hostPlatform) system;
   throwSystem = throw "Unsupported system: ${system}";
 
   suffix = {
-    x86_64-linux = "AppImage";
-    x86_64-darwin = "dmg";
+    x86_64-linux = ".AppImage";
+    x86_64-darwin = ".dmg";
+    aarch64-darwin = "-arm64.dmg";
   }.${system} or throwSystem;
 
   src = fetchurl {
-    url = "https://github.com/laurent22/joplin/releases/download/v${version}/Joplin-${version}.${suffix}";
+    url = "https://github.com/laurent22/joplin/releases/download/v${version}/Joplin-${version}${suffix}";
     sha256 = {
-      x86_64-linux = "sha256-KEEPPtWxaY6+Nu/CE+AVAnaVZ30zmASWiIYaJt4a+3E=";
-      x86_64-darwin = "sha256-8Rkj1pV6tJygznbfELnAhzhh7ImnTm9dxCxCjYlWdnU=";
+      x86_64-linux = "sha256-9ib8lymmSINqC0oXUxkKcpKfPh7qmU3YytU1/4aKMLg=";
+      x86_64-darwin = "sha256-vWc5yx3i5Ru8vrQbrTQwr43ZMBzOAb9254cxTHg6A/Q=";
+      aarch64-darwin = "sha256-dhwPqT+zfBYOVUV5JprPfgrSJR2ZNsC3LJmRHGJVM4k=";
     }.${system} or throwSystem;
   };
 
@@ -36,8 +38,8 @@ let
     '';
     homepage = "https://joplinapp.org";
     license = licenses.agpl3Plus;
-    maintainers = with maintainers; [ hugoreeves ];
-    platforms = [ "x86_64-linux" "x86_64-darwin" ];
+    maintainers = with maintainers; [ hugoreeves qjoly ];
+    platforms = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin"];
   };
 
   linux = appimageTools.wrapType2 rec {
@@ -47,10 +49,13 @@ let
       export LC_ALL=C.UTF-8
     '';
 
-    multiPkgs = null; # no 32bit needed
+    multiArch = false; # no 32bit needed
     extraPkgs = appimageTools.defaultFhsEnvArgs.multiPkgs;
     extraInstallCommands = ''
       mv $out/bin/{${name},${pname}}
+      source "${makeWrapper}/nix-support/setup-hook"
+      wrapProgram $out/bin/${pname} \
+        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland}}"
       install -Dm444 ${appimageContents}/@joplinapp-desktop.desktop -t $out/share/applications
       install -Dm444 ${appimageContents}/@joplinapp-desktop.png -t $out/share/pixmaps
       substituteInPlace $out/share/applications/@joplinapp-desktop.desktop \

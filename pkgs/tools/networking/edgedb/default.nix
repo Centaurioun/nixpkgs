@@ -1,6 +1,5 @@
 { stdenv
 , lib
-, runCommand
 , patchelf
 , fetchFromGitHub
 , rustPlatform
@@ -20,16 +19,27 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "edgedb";
-  version = "2.3.1";
+  version = "3.4.0";
 
   src = fetchFromGitHub {
     owner = "edgedb";
     repo = "edgedb-cli";
     rev =  "v${version}";
-    sha256 = "sha256-iL8tD6cvFVWqsQAk6HBUqdz7MJ3lT2XmExGQvdQdIWs=";
+    sha256 = "sha256-w6YpjSmh517yat45l4gGdV6qWD4O3aCx/6LL5wea+RA=";
+    fetchSubmodules = true;
   };
 
-  cargoSha256 = "sha256-dGeRTo6pFwDKd/nTaA3R9DWGiAL0Dm6jEVR1zhF6/BQ=";
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "edgedb-derive-0.5.0" = "sha256-y/mN0XuJtQBtkLmbk2s7hK5joGEH5Ge6sLCD88WyL9o=";
+      "edgeql-parser-0.1.0" = "sha256-Y3gXxPuR7qnTL4fu2nZIa3e20YV1fLvm2jHAng+Ke2Q=";
+      "indexmap-2.0.0-pre" = "sha256-QMOmoUHE1F/sp+NeDpgRGqqacWLHWG02YgZc5vAdXZY=";
+      "rexpect-0.5.0" = "sha256-vstAL/fJWWx7WbmRxNItKpzvgGF3SvJDs5isq9ym/OA=";
+      "rustyline-8.0.0" = "sha256-CrICwQbHPzS4QdVIEHxt2euX+g+0pFYe84NfMp1daEc=";
+      "serde_str-1.0.0" = "sha256-CMBh5lxdQb2085y0jc/DrV6B8iiXvVO2aoZH/lFFjak=";
+    };
+  };
 
   nativeBuildInputs = [ makeBinaryWrapper pkg-config perl ];
 

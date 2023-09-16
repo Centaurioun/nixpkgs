@@ -2,7 +2,6 @@
 , rustPlatform
 , lib
 , fetchFromGitHub
-, fetchpatch
 , ncurses
 , perl
 , pkg-config
@@ -23,6 +22,7 @@
 , CoreGraphics
 , Cocoa
 , Foundation
+, System
 , libiconv
 , UserNotifications
 , nixosTests
@@ -32,23 +32,15 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "wezterm";
-  version = "20221119-145034-49b9839f";
+  version = "20230712-072601-f4abf8fd";
 
   src = fetchFromGitHub {
     owner = "wez";
     repo = pname;
     rev = version;
     fetchSubmodules = true;
-    sha256 = "sha256-1gnP2Dn4nkhxelUsXMay2VGvgvMjkdEKhFK5AAST++s=";
+    hash = "sha256-B6AakLbTWIN123qAMQk/vFN83HHNRSNkqicNRU1GaCc=";
   };
-
-  patches = [
-    # fix build with rust 1.67
-    (fetchpatch {
-      url = "https://github.com/wez/wezterm/commit/36519f0d90e1875fb4b3f11f6cbf94c7d716ef78.patch";
-      sha256 = "sha256-sOGFmDan1uO1xOBCpvlGrSotjfw01MjRg0KVqa5omig=";
-    })
-  ];
 
   postPatch = ''
     echo ${version} > .tag
@@ -57,7 +49,14 @@ rustPlatform.buildRustPackage rec {
     rm -r wezterm-ssh/tests
   '';
 
-  cargoSha256 = "sha256-D6/biuLsXaCr0KSiopo9BuAVmniF8opAfDH71C3dtt0=";
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "image-0.24.5" = "sha256-fTajVwm88OInqCPZerWcSAm1ga46ansQ3EzAmbT58Js=";
+      "xcb-1.2.1" = "sha256-zkuW5ATix3WXBAj2hzum1MJ5JTX3+uVQ01R1vL6F1rY=";
+      "xcb-imdkit-0.2.0" = "sha256-L+NKD0rsCk9bFABQF4FZi9YoqBHr4VAZeKAWgsaAegw=";
+    };
+  };
 
   nativeBuildInputs = [
     installShellFiles
@@ -84,10 +83,13 @@ rustPlatform.buildRustPackage rec {
     CoreGraphics
     Foundation
     libiconv
+    System
     UserNotifications
   ];
 
   buildFeatures = [ "distro-defaults" ];
+
+  env.NIX_LDFLAGS = lib.optionalString stdenv.isDarwin "-framework System";
 
   postInstall = ''
     mkdir -p $out/nix-support
@@ -138,6 +140,7 @@ rustPlatform.buildRustPackage rec {
     description = "GPU-accelerated cross-platform terminal emulator and multiplexer written by @wez and implemented in Rust";
     homepage = "https://wezfurlong.org/wezterm";
     license = licenses.mit;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    mainProgram = "wezterm";
+    maintainers = with maintainers; [ SuperSandro2000 mimame ];
   };
 }

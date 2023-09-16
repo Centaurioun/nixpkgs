@@ -2,35 +2,36 @@
 , fetchPypi
 , buildPythonPackage
 , logutils
-, Mako
+, mako
+, webob
 , webtest
 , pythonOlder
 , pytestCheckHook
 , genshi
 , gunicorn
 , jinja2
-, six
 , sqlalchemy
 , virtualenv
+, setuptools
 }:
 
 buildPythonPackage rec {
   pname = "pecan";
-  version = "1.4.2";
+  version = "1.5.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-SbJV5wHD8UYWBfWw6PVPDCGSLXhF1BTCTdZAn+aV1VA=";
+    hash = "sha256-YGMnLV+GB3P7tLSyrhsJ2oyVQGLvhxFQwGz9sjkdk1U=";
   };
 
   propagatedBuildInputs = [
     logutils
-    Mako
-    webtest
-    six
+    mako
+    webob
+    setuptools
   ];
 
   nativeCheckInputs = [
@@ -40,6 +41,7 @@ buildPythonPackage rec {
     jinja2
     sqlalchemy
     virtualenv
+    webtest
   ];
 
   pytestFlagsArray = [

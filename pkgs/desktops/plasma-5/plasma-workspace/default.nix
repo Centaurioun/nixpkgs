@@ -2,9 +2,6 @@
 , lib
 , extra-cmake-modules
 , kdoctools
-, coreutils
-, gnugrep
-, gnused
 , isocodes
 , libdbusmenu
 , libSM
@@ -56,6 +53,7 @@
 , plasma-wayland-protocols
 , kpipewire
 , libkexiv2
+, kuserfeedback
 , qtgraphicaleffects
 , qtquickcontrols
 , qtquickcontrols2
@@ -67,6 +65,7 @@
 , polkit-qt
 , pipewire
 , libdrm
+, fetchpatch
 }:
 
 let inherit (lib) getBin getLib; in
@@ -126,6 +125,7 @@ mkDerivation {
     kpipewire
     libkexiv2
 
+    kuserfeedback
     qtgraphicaleffects
     qtquickcontrols
     qtquickcontrols2

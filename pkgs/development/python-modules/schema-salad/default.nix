@@ -1,27 +1,30 @@
 { lib
 , black
 , buildPythonPackage
-, fetchPypi
-, setuptools-scm
 , cachecontrol
+, fetchPypi
+, importlib-resources
 , lockfile
 , mistune
-, rdflib
-, ruamel-yaml
+, mypy
 , pytestCheckHook
 , pythonOlder
+, rdflib
+, ruamel-yaml
+, setuptools
+, setuptools-scm
 }:
 
 buildPythonPackage rec {
   pname = "schema-salad";
-  version = "8.4.20230127112827";
+  version = "8.4.20230808163024";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-nptZTNveutV9bGSkDPWLfiBusZblVqd/5m7DN4HwGJY=";
+    hash = "sha256-ai4vv6EFX4yTR8sgRspiG+M8a8oa83LIlJPGX7q+Kd0=";
   };
 
   nativeBuildInputs = [
@@ -30,11 +33,14 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [
     cachecontrol
+    importlib-resources
     lockfile
     mistune
+    mypy
     rdflib
     ruamel-yaml
-  ];
+    setuptools # needs pkg_resources at runtime
+  ] ++ cachecontrol.optional-dependencies.filecache;
 
   nativeCheckInputs = [
     pytestCheckHook
@@ -50,6 +56,7 @@ buildPythonPackage rec {
     "test_outputBinding"
     # Test requires network
     "test_yaml_tab_error"
+    "test_bad_schemas"
   ];
 
   pythonImportsCheck = [

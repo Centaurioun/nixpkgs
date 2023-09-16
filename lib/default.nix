@@ -41,6 +41,7 @@ let
 
     # serialization
     cli = callLibs ./cli.nix;
+    gvariant = callLibs ./gvariant.nix;
     generators = callLibs ./generators.nix;
 
     # misc
@@ -54,6 +55,7 @@ let
     # Eval-time filesystem handling
     path = callLibs ./path;
     filesystem = callLibs ./filesystem.nix;
+    fileset = callLibs ./fileset;
     sources = callLibs ./sources.nix;
 
     # back-compat aliases
@@ -78,7 +80,7 @@ let
       composeManyExtensions makeExtensible makeExtensibleWithCustomName;
     inherit (self.attrsets) attrByPath hasAttrByPath setAttrByPath
       getAttrFromPath attrVals attrValues getAttrs catAttrs filterAttrs
-      filterAttrsRecursive foldAttrs collect nameValuePair mapAttrs
+      filterAttrsRecursive foldlAttrs foldAttrs collect nameValuePair mapAttrs
       mapAttrs' mapAttrsToList concatMapAttrs mapAttrsRecursive mapAttrsRecursiveCond
       genAttrs isDerivation toDerivation optionalAttrs
       zipAttrsWithNames zipAttrsWith zipAttrs recursiveUpdateUntil
@@ -100,7 +102,7 @@ let
       escapeShellArg escapeShellArgs
       isStorePath isStringLike
       isValidPosixName toShellVar toShellVars
-      escapeRegex escapeXML replaceChars lowerChars
+      escapeRegex escapeURL escapeXML replaceChars lowerChars
       upperChars toLower toUpper addContextFrom splitString
       removePrefix removeSuffix versionOlder versionAtLeast
       getName getVersion
@@ -112,15 +114,16 @@ let
       noDepEntry fullDepEntry packEntry stringAfter;
     inherit (self.customisation) overrideDerivation makeOverridable
       callPackageWith callPackagesWith extendDerivation hydraJob
-      makeScope makeScopeWithSplicing;
+      makeScope makeScopeWithSplicing makeScopeWithSplicing';
     inherit (self.derivations) lazyDerivation;
     inherit (self.meta) addMetaAttrs dontDistribute setName updateName
       appendToName mapDerivationAttrset setPrio lowPrio lowPrioSet hiPrio
-      hiPrioSet getLicenseFromSpdxId getExe;
-    inherit (self.sources) pathType pathIsDirectory cleanSourceFilter
+      hiPrioSet getLicenseFromSpdxId getExe getExe';
+    inherit (self.filesystem) pathType pathIsDirectory pathIsRegularFile;
+    inherit (self.sources) cleanSourceFilter
       cleanSource sourceByRegex sourceFilesBySuffices
       commitIdFromGitRepo cleanSourceWith pathHasContext
-      canCleanSource pathIsRegularFile pathIsGitRepo;
+      canCleanSource pathIsGitRepo;
     inherit (self.modules) evalModules setDefaultModuleLocation
       unifyModuleSyntax applyModuleArgsIfFunction mergeModules
       mergeModules' mergeOptionDecls evalOptionValue mergeDefinitions
@@ -137,7 +140,7 @@ let
       mergeDefaultOption mergeOneOption mergeEqualOption mergeUniqueOption
       getValues getFiles
       optionAttrSetToDocList optionAttrSetToDocList'
-      scrubOptionValue literalExpression literalExample literalDocBook
+      scrubOptionValue literalExpression literalExample
       showOption showOptionWithDefLocs showFiles
       unknownModule mkOption mkPackageOption mkPackageOptionMD
       mdDoc literalMD;
@@ -145,11 +148,10 @@ let
       isOptionType mkOptionType;
     inherit (self.asserts)
       assertMsg assertOneOf;
-    inherit (self.debug) addErrorContextToAttrs traceIf traceVal traceValFn
-      traceXMLVal traceXMLValMarked traceSeq traceSeqN traceValSeq
-      traceValSeqFn traceValSeqN traceValSeqNFn traceFnSeqN traceShowVal
-      traceShowValMarked showVal traceCall traceCall2 traceCall3
-      traceValIfNot runTests testAllTrue traceCallXml attrNamesToStr;
+    inherit (self.debug) traceIf traceVal traceValFn
+      traceSeq traceSeqN traceValSeq
+      traceValSeqFn traceValSeqN traceValSeqNFn traceFnSeqN
+      runTests testAllTrue;
     inherit (self.misc) maybeEnv defaultMergeArg defaultMerge foldArgs
       maybeAttrNullable maybeAttr ifEnable checkFlag getValue
       checkReqs uniqList uniqListExt condConcat lazyGenericClosure

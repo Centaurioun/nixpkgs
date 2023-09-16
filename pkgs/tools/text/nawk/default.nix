@@ -1,18 +1,18 @@
-{ lib, stdenv, fetchFromGitHub, bison, buildPackages }:
+{ lib, stdenv, fetchFromGitHub, bison, buildPackages, installShellFiles }:
 
 stdenv.mkDerivation rec {
   pname = "nawk";
-  version = "unstable-2021-02-15";
+  version = "20230909";
 
   src = fetchFromGitHub {
     owner = "onetrueawk";
     repo = "awk";
-    rev = "c0f4e97e4561ff42544e92512bbaf3d7d1f6a671";
-    sha256 = "kQCvItpSJnDJMDvlB8ruY+i0KdjmAphRDqCKw8f0m/8=";
+    rev = version;
+    hash = "sha256-sBJ+ToFkhU5Ei84nqzbS0bUbsa+60iLSz2oeV5+PXEk=";
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ bison ];
+  nativeBuildInputs = [ bison installShellFiles ];
   makeFlags = [
     "CC=${stdenv.cc.targetPrefix}cc"
     "HOSTCC=${if stdenv.buildPlatform.isDarwin then "clang" else "cc"}"
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
   installPhase = ''
     runHook preInstall
     install -Dm755 a.out "$out/bin/nawk"
-    install -Dm644 awk.1 "$out/share/man/man1/nawk.1"
+    installManPage awk.1
     runHook postInstall
   '';
 

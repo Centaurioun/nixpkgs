@@ -9,6 +9,7 @@
 , mock
 , requests
 , requests-toolbelt
+, setuptools
 }:
 
 let
@@ -22,7 +23,7 @@ in
 
 buildPythonPackage rec {
   pname = "python-arango";
-  version = "7.5.4";
+  version = "7.5.7";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -31,13 +32,14 @@ buildPythonPackage rec {
     owner = "ArangoDB-Community";
     repo = "python-arango";
     rev = "refs/tags/${version}";
-    hash = "sha256-b3UZuH2hpulRSThReBkDwh0MLJmc95HeWInmmMAl4g0=";
+    hash = "sha256-cd2xE5rYLl3NOv/DZjmHRPCe224k4XyPjo9aXV1ZhvU=";
   };
 
   propagatedBuildInputs = [
     requests
     requests-toolbelt
     pyjwt
+    setuptools
   ];
 
   nativeCheckInputs = [
