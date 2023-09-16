@@ -2,6 +2,7 @@
 , rustPlatform
 , fetchFromGitHub
 , pkg-config
+, libgit2
 , openssl
 , stdenv
 , curl
@@ -11,22 +12,28 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-release";
-  version = "0.24.5";
+  version = "0.24.12";
 
   src = fetchFromGitHub {
     owner = "crate-ci";
     repo = "cargo-release";
     rev = "refs/tags/v${version}";
-    hash = "sha256-6+Ej5hpwnoeE8WlrYeaddDZP/j8a5cn+2qqMQmFjIBU=";
+    hash = "sha256-dB5gpaY6OB/IjMvqLUMH41l6Q/xMookxfVGXRcdhcBM=";
   };
 
-  cargoHash = "sha256-mYrnATxRHYqWr0EgU7U3t2WUm72Lj8roX4WvGEMqZx8=";
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "cargo-test-macro-0.1.0" = "sha256-jXWdCc3wxcF02uL2OyMepJ+DmINAHRYtAUH6L16bCjI=";
+    };
+  };
 
   nativeBuildInputs = [
     pkg-config
   ];
 
   buildInputs = [
+    libgit2
     openssl
   ] ++ lib.optionals stdenv.isDarwin [
     curl
@@ -36,6 +43,9 @@ rustPlatform.buildRustPackage rec {
   nativeCheckInputs = [
     git
   ];
+
+  # disable vendored-libgit2 and vendored-openssl
+  buildNoDefaultFeatures = true;
 
   meta = with lib; {
     description = ''Cargo subcommand "release": everything about releasing a rust crate'';

@@ -4,10 +4,12 @@
 , git
 , mock
 , pep440
+, pip
 , pytestCheckHook
 , pythonOlder
 , setuptools-scm
 , six
+, wheel
 }:
 
 buildPythonPackage rec {
@@ -30,12 +32,14 @@ buildPythonPackage rec {
 
   nativeBuildInputs = [
     setuptools-scm
+    wheel
   ];
 
   nativeCheckInputs = [
     git
     mock
     pep440
+    pip
     pytestCheckHook
     six
   ];
@@ -50,6 +54,9 @@ buildPythonPackage rec {
     "test_clean"
     "test_scenario"
     "test_git_versioning"
+    # setuptools.installer and fetch_build_eggs are deprecated.
+    # Requirements should be satisfied by a PEP 517 installer.
+    "test_brand_new_project"
   ];
 
   pythonImportsCheck = [

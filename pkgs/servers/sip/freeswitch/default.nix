@@ -88,12 +88,12 @@ in
 
 stdenv.mkDerivation rec {
   pname = "freeswitch";
-  version = "1.10.9";
+  version = "1.10.10";
   src = fetchFromGitHub {
     owner = "signalwire";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-65DH2HxiF8wqzmzbIqaQZjSa/JPERHIS2FW6F18c6Pw=";
+    sha256 = "sha256-3Mm/hbMwnlwbtiOFlODtKItVyj34O3beZDlV8YoJmts=";
   };
 
   postPatch = ''
@@ -151,7 +151,7 @@ stdenv.mkDerivation rec {
     description = "Cross-Platform Scalable FREE Multi-Protocol Soft Switch";
     homepage = "https://freeswitch.org/";
     license = lib.licenses.mpl11;
-    maintainers = with lib.maintainers; [ misuzu ];
+    maintainers = with lib.maintainers; [ ];
     platforms = with lib.platforms; unix;
     broken = stdenv.isDarwin;
   };

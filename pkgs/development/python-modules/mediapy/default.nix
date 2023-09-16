@@ -10,13 +10,13 @@
 
 buildPythonPackage rec {
   pname = "mediapy";
-  version = "1.1.2";
+  version = "1.1.8";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-uz+Pv3DvmhDajIqNpCj+2HsRT7Dh7Ks5yryhiEa8KOI=";
+    hash = "sha256-mVhBM+NQEkLYByp/kCPFJCAY26La5CWjcPl6PgclA9A=";
   };
 
   propagatedBuildInputs = [ ipython matplotlib numpy pillow ];

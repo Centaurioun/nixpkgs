@@ -6,6 +6,7 @@
 , git
 , fetchFromGitHub
 , ninja
+, gitUpdater
 }:
 
 let
@@ -13,12 +14,12 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "circt";
-  version = "1.30.0";
+  version = "1.54.0";
   src = fetchFromGitHub {
     owner = "llvm";
     repo = "circt";
     rev = "firtool-${version}";
-    sha256 = "sha256-VP1QwY/gA8wxjpzbAlEV5r2Q8sTt3K2sGdKmxr6ndB8=";
+    sha256 = "sha256-jHDQl6UJTyNGZ4PUTEiZCIN/RSRbBxlaVutkwrWbK9M=";
     fetchSubmodules = true;
   };
 
@@ -53,7 +54,10 @@ stdenv.mkDerivation rec {
   LIT_FILTER_OUT = if stdenv.cc.isClang then "CIRCT :: Target/ExportSystemC/.*\.mlir" else null;
 
   preConfigure = ''
-    substituteInPlace test/circt-reduce/test/annotation-remover.mlir --replace "/usr/bin/env" "${coreutils}/bin/env"
+    find ./test -name '*.mlir' -exec sed -i 's|/usr/bin/env|${coreutils}/bin/env|g' {} \;
+    # circt uses git to check its version, but when cloned on nix it can't access git.
+    # So this hard codes the version.
+    substituteInPlace cmake/modules/GenVersionFile.cmake --replace "unknown git version" "${src.rev}"
   '';
 
   installPhase = ''
@@ -65,6 +69,10 @@ stdenv.mkDerivation rec {
 
   doCheck = true;
   checkTarget = "check-circt check-circt-integration";
+
+  passthru.updateScript = gitUpdater {
+    rev-prefix = "firtool-";
+  };
 
   meta = {
     description = "Circuit IR compilers and tools";

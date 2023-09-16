@@ -19,17 +19,15 @@
 
 buildPythonPackage rec {
   pname = "flask";
-  version = "2.2.2";
+  version = "2.2.5";
 
   src = fetchPypi {
     pname = "Flask";
     inherit version;
-    sha256 = "sha256-ZCxFDRnErUgvlnKb0qj20yVUqh4jH09rTn5SZLFsyis=";
+    hash = "sha256-7e6bCn/yZiG9WowQ/0hK4oc3okENmbC7mmhQx/uXeqA=";
   };
 
   propagatedBuildInputs = [
-    asgiref
-    python-dotenv
     click
     itsdangerous
     jinja2
@@ -43,6 +41,10 @@ buildPythonPackage rec {
   passthru.tests = {
     inherit flask-limiter flask-restful flask-restx moto;
   };
+  passthru.optional-dependencies = {
+    dotenv = [ python-dotenv ];
+    async = [ asgiref ];
+  };
 
   meta = with lib; {
     homepage = "https://flask.palletsprojects.com/";
@@ -55,6 +57,6 @@ buildPythonPackage rec {
       Python web application frameworks.
     '';
     license = licenses.bsd3;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ nickcao ];
   };
 }

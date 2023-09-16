@@ -2,6 +2,8 @@
 , stdenv
 , fetchFromGitHub
 , rustPlatform
+, cargo
+, rustc
 , pkg-config
 , asciidoc
 , ncurses
@@ -10,6 +12,7 @@
 , cryptsetup
 , util-linux
 , udev
+, lvm2
 , systemd
 , xfsprogs
 , thin-provisioning-tools
@@ -25,18 +28,20 @@
 
 stdenv.mkDerivation rec {
   pname = "stratisd";
-  version = "3.5.1";
+  version = "3.5.9";
 
   src = fetchFromGitHub {
     owner = "stratis-storage";
     repo = pname;
-    rev = "v${version}";
-    hash = "sha256-PM+griFtuFT9g+Pqx33frWrucVCXSzfyWAJJXAzrMtI=";
+    rev = "refs/tags/stratisd-v${version}";
+    hash = "sha256-E4bBrbkqEh2twolPIHpHxphMG3bnDj0tjEBUWhrwL+M=";
   };
 
-  cargoDeps = rustPlatform.fetchCargoTarball {
-    inherit src;
-    hash = "sha256-P5GKMNifnEvGcsg0hGZn6hg3/S44fUIzqf5Qjp4R/EM=";
+  cargoDeps = rustPlatform.importCargoLock {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "loopdev-0.4.0" = "sha256-nV52zjsg5u6++J8CdN2phii8AwjHg1uap2lt+U8obDQ=";
+    };
   };
 
   postPatch = ''
@@ -51,11 +56,11 @@ stdenv.mkDerivation rec {
       --replace udevadm               "${udev}/bin/udevadm"
   '';
 
-  nativeBuildInputs = with rustPlatform; [
-    cargoSetupHook
-    bindgenHook
-    rust.cargo
-    rust.rustc
+  nativeBuildInputs = [
+    rustPlatform.cargoSetupHook
+    rustPlatform.bindgenHook
+    cargo
+    rustc
     pkg-config
     asciidoc
     ncurses # tput
@@ -68,7 +73,10 @@ stdenv.mkDerivation rec {
     cryptsetup
     util-linux
     udev
+    lvm2
   ];
+
+  outputs = [ "out" "initrd" ];
 
   EXECUTABLES_PATHS = lib.makeBinPath ([
     xfsprogs
@@ -91,6 +99,14 @@ stdenv.mkDerivation rec {
 
   # remove files for supporting dracut
   postInstall = ''
+    mkdir -p "$initrd/bin"
+    cp "dracut/90stratis/stratis-rootfs-setup" "$initrd/bin"
+    mkdir -p "$initrd/lib/systemd/system"
+    substitute "dracut/90stratis/stratisd-min.service" "$initrd/lib/systemd/system/stratisd-min.service" \
+      --replace /usr "$out" \
+      --replace mkdir "${coreutils}/bin/mkdir"
+    mkdir -p "$initrd/lib/udev/rules.d"
+    cp udev/61-stratisd.rules "$initrd/lib/udev/rules.d"
     rm -r "$out/lib/dracut"
     rm -r "$out/lib/systemd/system-generators"
   '';

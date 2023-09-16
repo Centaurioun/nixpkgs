@@ -1,5 +1,5 @@
 { lib
-, gcc12Stdenv
+, stdenv
 , cmake
 , llvm
 , fetchFromGitHub
@@ -18,21 +18,21 @@
 , fmt_8
 , nlohmann_json
 , yara
+, rsync
 }:
 
 let
-  # when bumping the version, check if imhex has gotten support for the capstone version in nixpkgs
-  version = "1.26.2";
+  version = "1.30.1";
 
   patterns_src = fetchFromGitHub {
     owner = "WerWolv";
     repo = "ImHex-Patterns";
     rev = "ImHex-v${version}";
-    hash = "sha256-2+7bJzgwHfXcINM5oxwi3vEbUtq9gGJc/uxFOwT4RnM=";
+    hash = "sha256-lTTXu9RxoD582lXWI789gNcWvJmxmBIlBRIiyY3DseM=";
   };
 
 in
-gcc12Stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   pname = "imhex";
   inherit version;
 
@@ -41,10 +41,10 @@ gcc12Stdenv.mkDerivation rec {
     owner = "WerWolv";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-H2bnRByCUAltngmVWgPW4vW8k5AWecOAzwtBKsjbpTw=";
+    hash = "sha256-3s9Dgdhl+k2KjMoSHNl59YOoCEwqK+37DOzKdGP88/4=";
   };
 
-  nativeBuildInputs = [ cmake llvm python3 perl pkg-config ];
+  nativeBuildInputs = [ cmake llvm python3 perl pkg-config rsync ];
 
   buildInputs = [
     capstone
@@ -63,8 +63,7 @@ gcc12Stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DIMHEX_OFFLINE_BUILD=ON"
-    # see comment at the top about our version of capstone
-    "-DUSE_SYSTEM_CAPSTONE=OFF"
+    "-DUSE_SYSTEM_CAPSTONE=ON"
     "-DUSE_SYSTEM_CURL=ON"
     "-DUSE_SYSTEM_FMT=ON"
     "-DUSE_SYSTEM_LLVM=ON"
@@ -72,18 +71,17 @@ gcc12Stdenv.mkDerivation rec {
     "-DUSE_SYSTEM_YARA=ON"
   ];
 
+  # rsync is used here so we can not copy the _schema.json files
   postInstall = ''
     mkdir -p $out/share/imhex
-    for d in ${patterns_src}/{constants,encodings,includes,magic,patterns}; do
-      cp -r $d $out/share/imhex/
-    done
+    rsync -av --exclude="*_schema.json" ${patterns_src}/{constants,encodings,includes,magic,patterns} $out/share/imhex
   '';
 
   meta = with lib; {
     description = "Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM";
     homepage = "https://github.com/WerWolv/ImHex";
     license = with licenses; [ gpl2Only ];
-    maintainers = with maintainers; [ luis ];
+    maintainers = with maintainers; [ luis kashw2 ];
     platforms = platforms.linux;
   };
 }

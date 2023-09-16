@@ -2,12 +2,12 @@
 , licenseAccepted ? false
 }:
 
-{ cmdLineToolsVersion ? "8.0"
+{ cmdLineToolsVersion ? "11.0"
 , toolsVersion ? "26.1.1"
-, platformToolsVersion ? "33.0.3"
-, buildToolsVersions ? [ "33.0.1" ]
+, platformToolsVersion ? "34.0.4"
+, buildToolsVersions ? [ "34.0.0" ]
 , includeEmulator ? false
-, emulatorVersion ? "31.3.14"
+, emulatorVersion ? "32.1.14"
 , platformVersions ? []
 , includeSources ? false
 , includeSystemImages ? false
@@ -15,7 +15,7 @@
 , abiVersions ? [ "armeabi-v7a" "arm64-v8a" ]
 , cmakeVersions ? [ ]
 , includeNDK ? false
-, ndkVersion ? "25.1.8937393"
+, ndkVersion ? "25.2.9519653"
 , ndkVersions ? [ndkVersion]
 , useGoogleAPIs ? false
 , useGoogleTVAddOns ? false
@@ -116,6 +116,7 @@ rec {
   deployAndroidPackages = callPackage ./deploy-androidpackages.nix {
     inherit stdenv lib mkLicenses;
   };
+
   deployAndroidPackage = ({package, os ? null, buildInputs ? [], patchInstructions ? "", meta ? {}, ...}@args:
     let
       extraParams = removeAttrs args [ "package" "os" "buildInputs" "patchInstructions" ];
@@ -127,15 +128,25 @@ rec {
     } // extraParams
   ));
 
+  # put a much nicer error message that includes the available options.
+  check-version = packages: package: version:
+    if lib.hasAttrByPath [ package version ] packages then
+      packages.${package}.${version}
+    else
+      throw ''
+        The version ${version} is missing in package ${package}.
+        The only available versions are ${builtins.concatStringsSep ", " (builtins.attrNames packages.${package})}.
+      '';
+
   platform-tools = callPackage ./platform-tools.nix {
     inherit deployAndroidPackage;
     os = if stdenv.system == "aarch64-darwin" then "macosx" else os; # "macosx" is a universal binary here
-    package = packages.platform-tools.${platformToolsVersion};
+    package = check-version packages "platform-tools" platformToolsVersion;
   };
 
   tools = callPackage ./tools.nix {
     inherit deployAndroidPackage os;
-    package = packages.tools.${toolsVersion};
+    package = check-version packages "tools" toolsVersion;
 
     postInstall = ''
       ${linkPlugin { name = "platform-tools"; plugin = platform-tools; }}
@@ -152,7 +163,7 @@ rec {
   build-tools = map (version:
     callPackage ./build-tools.nix {
       inherit deployAndroidPackage os;
-      package = packages.build-tools.${version};
+      package = check-version packages "build-tools" version;
 
       postInstall = ''
         ${linkPlugin { name = "tools"; plugin = tools; check = toolsVersion != null; }}
@@ -162,7 +173,7 @@ rec {
 
   emulator = callPackage ./emulator.nix {
     inherit deployAndroidPackage os;
-    package = packages.emulator.${emulatorVersion};
+    package = check-version packages "emulator" emulatorVersion;
 
     postInstall = ''
       ${linkSystemImages { images = system-images; check = includeSystemImages; }}
@@ -172,40 +183,58 @@ rec {
   platforms = map (version:
     deployAndroidPackage {
       inherit os;
-      package = packages.platforms.${version};
+      package = check-version packages "platforms" version;
     }
   ) platformVersions;
 
   sources = map (version:
     deployAndroidPackage {
       inherit os;
-      package = packages.sources.${version};
+      package = check-version packages "sources" version;
     }
   ) platformVersions;
 
   system-images = lib.flatten (map (apiVersion:
     map (type:
-      map (abiVersion:
-        lib.optionals (lib.hasAttrByPath [apiVersion type abiVersion] system-images-packages) (
-          deployAndroidPackage {
-            inherit os;
-            package = system-images-packages.${apiVersion}.${type}.${abiVersion};
-            # Patch 'google_apis' system images so they're recognized by the sdk.
-            # Without this, `android list targets` shows 'Tag/ABIs : no ABIs' instead
-            # of 'Tag/ABIs : google_apis*/*' and the emulator fails with an ABI-related error.
-            patchInstructions = lib.optionalString (lib.hasPrefix "google_apis" type) ''
+      # Deploy all system images with the same  systemImageType in one derivation to avoid the `null` problem below
+      # with avdmanager when trying to create an avd!
+      #
+      # ```
+      # $ yes "" | avdmanager create avd --force --name testAVD --package 'system-images;android-33;google_apis;x86_64'
+      # Error: Package path is not valid. Valid system image paths are:
+      # null
+      # ```
+      let
+        availablePackages = map (abiVersion:
+          system-images-packages.${apiVersion}.${type}.${abiVersion}
+        ) (builtins.filter (abiVersion:
+          lib.hasAttrByPath [apiVersion type abiVersion] system-images-packages
+        ) abiVersions);
+
+        instructions = builtins.listToAttrs (map (package: {
+            name = package.name;
+            value = lib.optionalString (lib.hasPrefix "google_apis" type) ''
+              # Patch 'google_apis' system images so they're recognized by the sdk.
+              # Without this, `android list targets` shows 'Tag/ABIs : no ABIs' instead
+              # of 'Tag/ABIs : google_apis*/*' and the emulator fails with an ABI-related error.
               sed -i '/^Addon.Vendor/d' source.properties
             '';
-          }
-        )
-      ) abiVersions
+          }) availablePackages
+        );
+      in
+      lib.optionals (availablePackages != [])
+        (deployAndroidPackages {
+          inherit os;
+          packages = availablePackages;
+          patchesInstructions = instructions;
+        })
     ) systemImageTypes
   ) platformVersions);
 
   cmake = map (version:
     callPackage ./cmake.nix {
       inherit deployAndroidPackage os;
-      package = packages.cmake.${version};
+      package = check-version packages "cmake" version;
     }
   ) cmakeVersions;
 
@@ -225,14 +254,14 @@ rec {
   google-apis = map (version:
     deployAndroidPackage {
       inherit os;
-      package = addons.addons.${version}.google_apis;
+      package = (check-version addons "addons" version).google_apis;
     }
   ) (builtins.filter (platformVersion: platformVersion < "26") platformVersions); # API level 26 and higher include Google APIs by default
 
   google-tv-addons = map (version:
     deployAndroidPackage {
       inherit os;
-      package = addons.addons.${version}.google_tv_addon;
+      package = (check-version addons "addons" version).google_tv_addon;
     }
   ) platformVersions;
 
@@ -271,8 +300,8 @@ rec {
     ${lib.concatMapStrings (system-image: ''
       apiVersion=$(basename $(echo ${system-image}/libexec/android-sdk/system-images/*))
       type=$(basename $(echo ${system-image}/libexec/android-sdk/system-images/*/*))
-      mkdir -p system-images/$apiVersion/$type
-      ln -s ${system-image}/libexec/android-sdk/system-images/$apiVersion/$type/* system-images/$apiVersion/$type
+      mkdir -p system-images/$apiVersion
+      ln -s ${system-image}/libexec/android-sdk/system-images/$apiVersion/$type system-images/$apiVersion/$type
     '') images}
   '';
 
@@ -285,6 +314,8 @@ rec {
       '') plugins}
     ''; # */
 
+  cmdline-tools-package = check-version packages "cmdline-tools" cmdLineToolsVersion;
+
   # This derivation deploys the tools package and symlinks all the desired
   # plugins that we want to use. If the license isn't accepted, prints all the licenses
   # requested and throws.
@@ -294,11 +325,15 @@ rec {
     You must accept the following licenses:
     ${lib.concatMapStringsSep "\n" (str: "  - ${str}") licenseNames}
 
-    by setting nixpkgs config option 'android_sdk.accept_license = true;'.
+    a)
+      by setting nixpkgs config option 'android_sdk.accept_license = true;'.
+    b)
+      by an environment variable for a single invocation of the nix tools.
+        $ export NIXPKGS_ACCEPT_ANDROID_SDK_LICENSE=1
   '' else callPackage ./cmdline-tools.nix {
-    inherit deployAndroidPackage os cmdLineToolsVersion;
+    inherit deployAndroidPackage os;
 
-    package = packages.cmdline-tools.${cmdLineToolsVersion};
+    package = cmdline-tools-package;
 
     postInstall = ''
       # Symlink all requested plugins
@@ -342,7 +377,7 @@ rec {
           ln -s $i $out/bin
       done
 
-      find $ANDROID_SDK_ROOT/cmdline-tools/${cmdLineToolsVersion}/bin -type f -executable | while read i; do
+      find $ANDROID_SDK_ROOT/${cmdline-tools-package.path}/bin -type f -executable | while read i; do
           ln -s $i $out/bin
       done
 

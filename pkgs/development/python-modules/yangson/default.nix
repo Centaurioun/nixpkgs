@@ -2,18 +2,18 @@
 , buildPythonPackage
 , fetchPypi
 , setuptools-scm
-, pyxb
+, elementpath
 , pytestCheckHook
 }:
 
 buildPythonPackage rec {
   pname = "yangson";
-  version = "1.4.15";
+  version = "1.4.18";
   format = "setuptools";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-yw/LwWjHW4vgHp06E/DgqauTvdfLxerHw1avge91XLU=";
+    hash = "sha256-VMgx2MTiOoAw8tW8SckheN950JVbdWWSS3PWDNs0dT0=";
   };
 
   nativeBuildInputs = [
@@ -21,7 +21,7 @@ buildPythonPackage rec {
   ];
 
   propagatedBuildInputs = [
-    pyxb
+    elementpath
   ];
 
   nativeCheckInputs = [

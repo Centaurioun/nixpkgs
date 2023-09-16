@@ -2,18 +2,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "mdbook";
-  version = "0.4.26";
+  version = "0.4.34";
 
   src = fetchFromGitHub {
     owner = "rust-lang";
     repo = "mdBook";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-+K2mbVbOMQDumcPgiPtqDts/RGi+E0lF7Cftt86X/5A=";
+    sha256 = "sha256-QkgsFnX6J0ZgXCzGE/dTNLxdXLhCFwLsZCvmZ4SU4Zs=";
   };
 
-  cargoHash = "sha256-C9ziW3LUBGR/K+nR3mDr62KoE9p3mn+50nfd/3NFjro=";
-
-  auditable = true; # TODO: remove when this is the default
+  cargoHash = "sha256-Dhblzn7NytYeY76RmvI8cNjChnCSnTPadxPKyU5QT1Q=";
 
   buildInputs = lib.optionals stdenv.isDarwin [ CoreServices ];
 
@@ -28,6 +26,6 @@ rustPlatform.buildRustPackage rec {
     homepage = "https://github.com/rust-lang/mdBook";
     changelog = "https://github.com/rust-lang/mdBook/blob/v${version}/CHANGELOG.md";
     license = [ licenses.mpl20 ];
-    maintainers = with maintainers; [ havvy Frostman ];
+    maintainers = with maintainers; [ havvy Frostman matthiasbeyer ];
   };
 }

@@ -19,7 +19,7 @@ buildPythonPackage rec {
     owner = "joseph-roitman";
     repo = pname;
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-0PZu9wL29iEppLxxbl4D0E4WfOHe61KUUld003cRBRU=";
+    hash = "sha256-0PZu9wL29iEppLxxbl4D0E4WfOHe61KUUld003cRBRU=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;
@@ -48,6 +48,6 @@ buildPythonPackage rec {
     description = "A plugin to enable snapshot testing with pytest";
     homepage = "https://github.com/joseph-roitman/pytest-snapshot/";
     license = licenses.mit;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

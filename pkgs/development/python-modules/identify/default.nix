@@ -9,16 +9,16 @@
 
 buildPythonPackage rec {
   pname = "identify";
-  version = "2.5.18";
+  version = "2.5.28";
   format = "setuptools";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "pre-commit";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-Pf9/mjbyC859WT8ZreFq5u6YER/tRgsQuqIgt6mdPqE=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-pGSXXsA+gIIIZbnwa22EmizZT65MqZrWd3+o47VatBs=";
   };
 
   nativeCheckInputs = [

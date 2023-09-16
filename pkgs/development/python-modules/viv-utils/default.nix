@@ -12,13 +12,13 @@
 }:
 buildPythonPackage rec {
   pname = "viv-utils";
-  version = "0.7.7";
+  version = "0.7.9";
 
   src = fetchFromGitHub {
     owner = "williballenthin";
     repo = "viv-utils";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-ih6CtnsGfHRLDjoaF7BkoUENu+0pU3NB6TG0A70f3nE=";
+    hash = "sha256-xM3jtA6fNk36+enL/EcQH59CNajYnGlEDu06QXIFz6A=";
   };
 
   postPatch = ''
@@ -50,7 +50,8 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Utilities for working with vivisect";
     homepage = "https://github.com/williballenthin/viv-utils";
+    changelog = "https://github.com/williballenthin/viv-utils/releases/tag/v${version}";
     license = licenses.asl20;
-    maintainers = teams.determinatesystems.members;
+    maintainers = [ ];
   };
 }

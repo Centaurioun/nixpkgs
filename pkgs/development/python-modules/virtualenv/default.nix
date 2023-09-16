@@ -1,52 +1,47 @@
 { lib
-, stdenv
 , buildPythonPackage
 , pythonOlder
 , isPy27
+, isPyPy
 , cython
 , distlib
 , fetchPypi
 , filelock
 , flaky
+, hatch-vcs
+, hatchling
 , importlib-metadata
-, importlib-resources
-, pathlib2
 , platformdirs
 , pytest-freezegun
 , pytest-mock
 , pytest-timeout
 , pytestCheckHook
-, setuptools-scm
+, time-machine
 }:
 
 buildPythonPackage rec {
   pname = "virtualenv";
-  version = "20.17.1";
-  format = "setuptools";
+  version = "20.24.0";
+  format = "pyproject";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-+LknaE78bxzCBsnbKXpXCrmtDlHBb6nkVIfTbRkFwFg=";
+    hash = "sha256-4qfO+dqIDWk7kz23ZUNndU8U4gZQ3GDo7nOFVx+Fk6M=";
   };
 
   nativeBuildInputs = [
-    setuptools-scm
+    hatch-vcs
+    hatchling
   ];
 
   propagatedBuildInputs = [
     distlib
     filelock
     platformdirs
-  ] ++ lib.optionals (pythonOlder "3.7") [
-    importlib-resources
   ] ++ lib.optionals (pythonOlder "3.8") [
     importlib-metadata
-  ];
-
-  patches = lib.optionals (isPy27) [
-    ./0001-Check-base_prefix-and-base_exec_prefix-for-Python-2.patch
   ];
 
   nativeCheckInputs = [
@@ -56,6 +51,8 @@ buildPythonPackage rec {
     pytest-mock
     pytest-timeout
     pytestCheckHook
+  ] ++ lib.optionals (!isPyPy) [
+    time-machine
   ];
 
   preCheck = ''
@@ -74,6 +71,13 @@ buildPythonPackage rec {
     "test_seed_link_via_app_data"
     # Permission Error
     "test_bad_exe_py_info_no_raise"
+  ] ++ lib.optionals (isPyPy) [
+    # encoding problems
+    "test_bash"
+    # permission error
+    "test_can_build_c_extensions"
+    # fails to detect pypy version
+    "test_discover_ok"
   ];
 
   pythonImportsCheck = [
@@ -83,7 +87,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "A tool to create isolated Python environments";
     homepage = "http://www.virtualenv.org";
-    changelog = "https://github.com/pypa/virtualenv/releases/tag/${version}";
+    changelog = "https://github.com/pypa/virtualenv/blob/${version}/docs/changelog.rst";
     license = licenses.mit;
     maintainers = with maintainers; [ goibhniu ];
   };

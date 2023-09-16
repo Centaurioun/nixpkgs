@@ -13,13 +13,13 @@
 }:
 stdenv.mkDerivation rec {
   pname = "pgbackrest";
-  version = "2.44";
+  version = "2.47";
 
   src = fetchFromGitHub {
     owner = "pgbackrest";
     repo = "pgbackrest";
     rev = "release/${version}";
-    sha256 = "sha256-N56HUW1JZNvaqzU01xaZ8BsFA2KW4z8ixulPngYCIY0=";
+    sha256 = "sha256-HKmJA/WlMR6Epu5WuD8pABDh5gaN+T98lc4ejgoD8LM=";
   };
 
   nativeBuildInputs = [ pkg-config ];
@@ -34,6 +34,7 @@ stdenv.mkDerivation rec {
     homepage = "https://pgbackrest.org/";
     changelog = "https://github.com/pgbackrest/pgbackrest/releases";
     license = licenses.mit;
+    mainProgram = "pgbackrest";
     maintainers = with maintainers; [ zaninime ];
   };
 }

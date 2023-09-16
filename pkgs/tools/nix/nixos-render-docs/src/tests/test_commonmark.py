@@ -1,13 +1,14 @@
-import nixos_render_docs
+import nixos_render_docs as nrd
 
 from sample_md import sample1
 
-from typing import Mapping, Optional
+from typing import Mapping
 
-import markdown_it
 
-class Converter(nixos_render_docs.md.Converter):
-    __renderer__ = nixos_render_docs.commonmark.CommonMarkRenderer
+class Converter(nrd.md.Converter[nrd.commonmark.CommonMarkRenderer]):
+    def __init__(self, manpage_urls: Mapping[str, str]):
+        super().__init__()
+        self._renderer = nrd.commonmark.CommonMarkRenderer(manpage_urls)
 
 # NOTE: in these tests we represent trailing spaces by ` ` and replace them with real space later,
 # since a number of editors will strip trailing whitespace on save and that would break the tests.
@@ -25,7 +26,7 @@ def test_indented_fence() -> None:
 
 def test_full() -> None:
     c = Converter({ 'man(1)': 'http://example.org' })
-    assert c._render(sample1) == f"""\
+    assert c._render(sample1) == """\
 **Warning:** foo
 
 **Note:** nested
@@ -90,3 +91,9 @@ some nested anchors
  - *‌more stuff in same deflist‌*
    
    foo""".replace(' ', ' ')
+
+def test_images() -> None:
+    c = Converter({})
+    assert c._render("![*alt text*](foo \"title \\\"quoted\\\" text\")") == (
+        "![*alt text*](foo \"title \\\"quoted\\\" text\")"
+    )

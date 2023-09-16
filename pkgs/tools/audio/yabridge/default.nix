@@ -3,7 +3,6 @@
 , fetchFromGitHub
 , substituteAll
 , pkgsi686Linux
-, fetchpatch
 , dbus
 , meson
 , ninja
@@ -18,68 +17,69 @@ let
   asio = fetchFromGitHub {
     owner = "chriskohlhoff";
     repo = "asio";
-    rev = "asio-1-22-1";
-    sha256 = "sha256-UDLhx2yI6Txg0wP5H4oNIhgKIB2eMxUGCyT2x/7GgVg=";
+    rev = "refs/tags/asio-1-22-1";
+    hash = "sha256-UDLhx2yI6Txg0wP5H4oNIhgKIB2eMxUGCyT2x/7GgVg=";
   };
 
   # Derived from subprojects/bitsery.wrap
   bitsery = fetchFromGitHub {
     owner = "fraillt";
     repo = "bitsery";
-    rev = "v5.2.2";
-    sha256 = "sha256-VwzVtxt+E/SVcxqIJw8BKPO2q7bu/hkhY+nB7FHrZpY=";
+    rev = "refs/tags/v5.2.2";
+    hash = "sha256-VwzVtxt+E/SVcxqIJw8BKPO2q7bu/hkhY+nB7FHrZpY=";
   };
 
   # Derived from subprojects/clap.wrap
   clap = fetchFromGitHub {
     owner = "free-audio";
     repo = "clap";
-    rev = "1.1.4";
-    sha256 = "sha256-3zDvzC3Hs4OmT2qvaDa69rmBkHoQ8qY9TZlsPxsJA40=";
+    rev = "refs/tags/1.1.7";
+    hash = "sha256-WcMTxE+QCzlp4lhFdghZI8UI/5mdVeRvrl24Xynd0qk=";
   };
 
   # Derived from subprojects/function2.wrap
   function2 = fetchFromGitHub {
     owner = "Naios";
     repo = "function2";
-    rev = "4.2.0";
-    sha256 = "sha256-wrt+fCcM6YD4ZRZYvqqB+fNakCNmltdPZKlNkPLtgMs=";
+    rev = "refs/tags/4.2.0";
+    hash = "sha256-wrt+fCcM6YD4ZRZYvqqB+fNakCNmltdPZKlNkPLtgMs=";
   };
 
   # Derived from subprojects/ghc_filesystem.wrap
   ghc_filesystem = fetchFromGitHub {
     owner = "gulrak";
     repo = "filesystem";
-    rev = "v1.5.12";
-    sha256 = "sha256-j4RE5Ach7C7Kef4+H9AHSXa2L8OVyJljDwBduKcC4eE=";
+    rev = "refs/tags/v1.5.12";
+    hash = "sha256-j4RE5Ach7C7Kef4+H9AHSXa2L8OVyJljDwBduKcC4eE=";
   };
 
   # Derived from subprojects/tomlplusplus.wrap
   tomlplusplus = fetchFromGitHub {
     owner = "marzer";
     repo = "tomlplusplus";
-    rev = "v3.0.1";
-    sha256 = "sha256-l8ckbCqjz3GUfwStcl3H2C+un5dZfT2uLtayvdu93D4=";
+    rev = "refs/tags/v3.3.0";
+    hash = "sha256-INX8TOEumz4B5coSxhiV7opc3rYJuQXT2k1BJ3Aje1M=";
   };
 
   # Derived from vst3.wrap
   vst3 = fetchFromGitHub {
     owner = "robbert-vdh";
     repo = "vst3sdk";
-    rev = "v3.7.7_build_19-patched";
+    rev = "refs/tags/v3.7.7_build_19-patched";
     fetchSubmodules = true;
-    sha256 = "sha256-LsPHPoAL21XOKmF1Wl/tvLJGzjaCLjaDAcUtDvXdXSU=";
+    hash = "sha256-LsPHPoAL21XOKmF1Wl/tvLJGzjaCLjaDAcUtDvXdXSU=";
   };
-in multiStdenv.mkDerivation rec {
+in
+multiStdenv.mkDerivation (finalAttrs: {
   pname = "yabridge";
-  version = "5.0.3";
+  version = "5.0.5";
 
   # NOTE: Also update yabridgectl's cargoHash when this is updated
   src = fetchFromGitHub {
     owner = "robbert-vdh";
-    repo = pname;
-    rev = version;
-    sha256 = "sha256-T3BU77BbVr6vlVoijUQy86eF0lCgM4S4d5VSnLE4pas=";
+    repo = "yabridge";
+    rev = "refs/tags/${finalAttrs.version}";
+    hash = "sha256-SB2/zKxj9GDOOb3Zn4kWj7dXhDg/wbx6nPKYbQ041Cs=";
   };
 
   # Unpack subproject sources
@@ -104,14 +104,6 @@ in multiStdenv.mkDerivation rec {
 
     # Patch the chainloader to search for libyabridge through NIX_PROFILES
     ./libyabridge-from-nix-profiles.patch
-
-    # Remove with next yabridge update
-   (fetchpatch {
-      name = "fix-for-wine-8.0.patch";
-      url = "https://github.com/robbert-vdh/yabridge/commit/29acd40a9add635e2cb40ecc54c88d65604a7a2a.patch";
-      sha256 = "sha256-hVxa/FqH7d938Z/VjHdhmYLCLPZoa9C4xKSKRKiVPSU=";
-      includes = [ "meson.build" ];
-    })
   ];
 
   postPatch = ''
@@ -166,9 +158,9 @@ in multiStdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "A modern and transparent way to use Windows VST2 and VST3 plugins on Linux";
-    homepage = src.meta.homepage;
+    homepage = "https://github.com/robbert-vdh/yabridge";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ kira-bruneau ];
     platforms = [ "x86_64-linux" ];
   };
-}
+})
