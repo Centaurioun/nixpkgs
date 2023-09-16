@@ -1,34 +1,33 @@
 { lib
-, fetchFromGitHub
 , buildGoModule
-, clangStdenv
+, fetchFromGitHub
 , pkg-config
 , alsa-lib
 , flac
+, nix-update-script
 }:
 
-# gcc only supports objc on darwin
-buildGoModule.override { stdenv = clangStdenv; } rec {
+buildGoModule rec {
   pname = "go-musicfox";
-  version = "3.7.0";
+  version = "4.1.4";
 
   src = fetchFromGitHub {
-    owner = "anhoder";
+    owner = "go-musicfox";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-IXB5eOXVtoe21WbQa9x5SKcgUpgyjVx48998vdccMPM=";
+    hash = "sha256-z4zyLHflmaX5k69KvPTISRIEHVjDmEGZenNXfYd3UUk=";
   };
 
   deleteVendor = true;
 
-  vendorHash = null;
+  vendorHash = "sha256-S1OIrcn55wm/b7B3lz55guuS+mrv5MswNMO2UyfgjRc=";
 
   subPackages = [ "cmd/musicfox.go" ];
 
   ldflags = [
     "-s"
     "-w"
-    "-X go-musicfox/pkg/constants.AppVersion=${version}"
+    "-X github.com/go-musicfox/go-musicfox/pkg/constants.AppVersion=${version}"
   ];
 
   nativeBuildInputs = [
@@ -40,11 +39,13 @@ buildGoModule.override { stdenv = clangStdenv; } rec {
     flac
   ];
 
+  passthru.updateScript = nix-update-script { };
+
   meta = with lib; {
     description = "Terminal netease cloud music client written in Go";
     homepage = "https://github.com/anhoder/go-musicfox";
     license = licenses.mit;
     mainProgram = "musicfox";
-    maintainers = with maintainers; [ zendo ];
+    maintainers = with maintainers; [ zendo Ruixi-rebirth aleksana ];
   };
 }

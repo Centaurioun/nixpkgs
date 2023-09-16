@@ -1,6 +1,7 @@
 { lib, stdenv, llvm_meta, version
 , monorepoSrc, runCommand
 , cmake
+, ninja
 , python3
 , enableShared ? !stdenv.hostPlatform.isStatic
 }:
@@ -39,9 +40,14 @@ stdenv.mkDerivation rec {
     cd ../runtimes
   '';
 
+  postInstall = lib.optionalString (enableShared && !stdenv.hostPlatform.isDarwin) ''
+    # libcxxabi wants to link to libunwind_shared.so (?).
+    ln -s $out/lib/libunwind.so $out/lib/libunwind_shared.so
+  '';
+
   outputs = [ "out" "dev" ];
 
-  nativeBuildInputs = [ cmake python3 ];
+  nativeBuildInputs = [ cmake ninja python3 ];
 
   cmakeFlags = [
     "-DLLVM_ENABLE_RUNTIMES=libunwind"

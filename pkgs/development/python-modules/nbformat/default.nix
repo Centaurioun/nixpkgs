@@ -15,15 +15,13 @@
 
 buildPythonPackage rec {
   pname = "nbformat";
-  version = "5.7.1";
-
-  disabled = pythonOlder "3.7";
-
+  version = "5.9.1";
   format = "pyproject";
+  disabled = pythonOlder "3.8";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-OBCgEwRT7QMZcFIdIJibilkvPC5zKDqCgK40rh91s/g=";
+    hash = "sha256-On9S0EBjnL2KOJAhjIsP+5MhFYjFdEbJAJXjK6WIG10=";
   };
 
   nativeBuildInputs = [

@@ -21,7 +21,7 @@ buildPythonPackage rec {
     owner = pname;
     repo = pname;
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-aVnXCrTh+0Ip+FgYWN7hLw8N3iQCmXSywhReD5RTUfI=";
+    hash = "sha256-aVnXCrTh+0Ip+FgYWN7hLw8N3iQCmXSywhReD5RTUfI=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;
@@ -61,6 +61,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/python-lz4/python-lz4";
     changelog = "https://github.com/python-lz4/python-lz4/releases/tag/v${version}";
     license = licenses.bsd3;
-    maintainers = with maintainers; [ costrouc ];
+    maintainers = with maintainers; [ ];
   };
 }

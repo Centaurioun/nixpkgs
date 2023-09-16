@@ -5,13 +5,13 @@
 
 buildGoModule rec {
   pname = "ferretdb";
-  version = "0.9.2";
+  version = "1.9.0";
 
   src = fetchFromGitHub {
     owner = "FerretDB";
     repo = "FerretDB";
     rev = "v${version}";
-    sha256 = "sha256-lJlj5GNgrllcaEednxVCmMPHG2aU4z3mKkm9t0cO5Tk=";
+    hash = "sha256-cDXdTFgSf126BuPG2h0xZFUTCgyg8IVmNySCQyJV4T4=";
   };
 
   postPatch = ''
@@ -19,13 +19,22 @@ buildGoModule rec {
     echo nixpkgs     > build/version/package.txt
   '';
 
-  vendorSha256 = "sha256-I5ucq3K0lRsokG9lahmBUH9mIYa5tgHnL+vxKSzW1hw=";
+  vendorHash = "sha256-mzgj5VBggAqCFlLUcNE03B9jFHLKgfTzH6LI9wTe6Io=";
 
   CGO_ENABLED = 0;
 
   subPackages = [ "cmd/ferretdb" ];
 
   tags = [ "ferretdb_tigris" ];
+
+  # tests in cmd/ferretdb are not production relevant
+  doCheck = false;
+
+  # the binary panics if something required wasn't set during compilation
+  doInstallCheck = true;
+  installCheckPhase = ''
+    $out/bin/ferretdb --version | grep ${version}
+  '';
 
   meta = with lib; {
     description = "A truly Open Source MongoDB alternative";

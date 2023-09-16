@@ -14,14 +14,14 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-datacatalog";
-  version = "3.11.1";
+  version = "3.15.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-X4h6hrEfjiroAgtG26bz70P2PsEileHmZ5Jq6iPHqCs=";
+    hash = "sha256-XihIFu8TUrZgQqJ43LJVB0vCIjf89MpGfmDXS5yUuoM=";
   };
 
   propagatedBuildInputs = [
@@ -47,6 +47,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/googleapis/python-datacatalog";
     changelog = "https://github.com/googleapis/python-datacatalog/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

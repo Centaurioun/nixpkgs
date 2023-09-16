@@ -20,8 +20,14 @@ buildPythonPackage rec {
     owner = "ludeeus";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "sha256-HMJqZn0yzN2dP5WTRCbem1Xw8nyH2Hy7oVP4kEKHHAo=";
+    hash = "sha256-HMJqZn0yzN2dP5WTRCbem1Xw8nyH2Hy7oVP4kEKHHAo=";
   };
+
+  postPatch = ''
+    # Upstream doesn't set a version for the tagged releases
+    substituteInPlace setup.py \
+      --replace "main" ${version}
+  '';
 
   propagatedBuildInputs = [
     aiohttp
@@ -34,15 +40,14 @@ buildPythonPackage rec {
     pytestCheckHook
   ];
 
-  postPatch = ''
-    # Upstream doesn't set a version for the tagged releases
-    substituteInPlace setup.py \
-      --replace "main" ${version}
-  '';
-
-
   pythonImportsCheck = [
     "pyhaversion"
+  ];
+
+  disabledTests = [
+    # Error fetching version information from HaVersionSource.SUPERVISOR Server disconnected
+    "test_stable_version"
+    "test_etag"
   ];
 
   meta = with lib; {

@@ -47,13 +47,13 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "radare2";
-  version = "5.8.2";
+  version = "5.8.8";
 
   src = fetchFromGitHub {
     owner = "radare";
     repo = "radare2";
-    rev = version;
-    hash = "sha256-jwr3QPgJ6vKSk8yGxndQ69AickP8PorNDuGyJzHMpV4=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-JGNV5xSyrjcO2ZgOjzDqzfZyALPSCyA3DZx/D8ffmKA=";
   };
 
   preBuild = ''
@@ -110,6 +110,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "UNIX-like reverse engineering framework and command-line tools";
     homepage = "https://radare.org";
+    changelog = "https://github.com/radareorg/radare2/releases/tag/${version}";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ azahi raskin makefu mic92 arkivm ];
     platforms = platforms.unix;

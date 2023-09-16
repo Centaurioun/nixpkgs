@@ -7,15 +7,16 @@
 
 buildGoModule rec {
   pname = "ko";
-  version = "0.12.0";
+  version = "0.14.1";
 
   src = fetchFromGitHub {
     owner = "ko-build";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-hhPV40e5wB2/VcdigqgjffDW4X1ZDddXTZiCUBijtHQ=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-jBysfeoZ9W94c07xFODBASrWGJbZRHsUODfEul9f4Ug=";
   };
-  vendorSha256 = null;
+
+  vendorHash = null;
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -23,6 +24,11 @@ buildGoModule rec {
   subPackages = ".";
 
   ldflags = [ "-s" "-w" "-X github.com/google/ko/pkg/commands.Version=${version}" ];
+
+  checkFlags = [
+    # requires docker daemon
+    "-skip=TestNewPublisherCanPublish"
+  ];
 
   nativeCheckInputs = [ git ];
   preCheck = ''
@@ -60,6 +66,6 @@ buildGoModule rec {
       ko also includes support for simple YAML templating which makes it a powerful tool for Kubernetes applications.
     '';
     license = licenses.asl20;
-    maintainers = with maintainers; [ nickcao jk vdemeester ];
+    maintainers = with maintainers; [ nickcao jk vdemeester developer-guy ];
   };
 }

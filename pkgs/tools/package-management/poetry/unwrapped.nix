@@ -4,12 +4,13 @@
 , pythonOlder
 , fetchFromGitHub
 , installShellFiles
+, pythonRelaxDepsHook
+, build
 , cachecontrol
 , cleo
 , crashtest
 , dulwich
-, filelock
-, html5lib
+, installer
 , jsonschema
 , keyring
 , packaging
@@ -18,6 +19,7 @@
 , platformdirs
 , poetry-core
 , poetry-plugin-export
+, pyproject-hooks
 , requests
 , requests-toolbelt
 , shellingham
@@ -27,7 +29,6 @@
 , xattr
 , tomli
 , importlib-metadata
-, backports-cached-property
 , cachy
 , deepdiff
 , flatdict
@@ -40,29 +41,35 @@
 
 buildPythonPackage rec {
   pname = "poetry";
-  version = "1.3.2";
+  version = "1.6.1";
   format = "pyproject";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "python-poetry";
     repo = pname;
     rev = "refs/tags/${version}";
-    hash = "sha256-12EiEGI9Vkb6EUY/W2KWeLigxWra1Be4ozvi8njBpEU=";
+    hash = "sha256-/OvYT4Vix1t5Yx/Tx0z3E9L9qJ4OdI4maQqUVl8H524=";
   };
 
   nativeBuildInputs = [
     installShellFiles
+    pythonRelaxDepsHook
+  ];
+
+  pythonRelaxDeps = [
+    # only pinned to avoid dependency on Rust
+    "jsonschema"
   ];
 
   propagatedBuildInputs = [
+    build
     cachecontrol
     cleo
     crashtest
     dulwich
-    filelock
-    html5lib
+    installer
     jsonschema
     keyring
     packaging
@@ -71,6 +78,7 @@ buildPythonPackage rec {
     platformdirs
     poetry-core
     poetry-plugin-export
+    pyproject-hooks
     requests
     requests-toolbelt
     shellingham
@@ -83,8 +91,6 @@ buildPythonPackage rec {
     tomli
   ] ++ lib.optionals (pythonOlder "3.10") [
     importlib-metadata
-  ] ++ lib.optionals (pythonOlder "3.8") [
-    backports-cached-property
   ] ++ cachecontrol.optional-dependencies.filecache;
 
   postInstall = ''
@@ -116,12 +122,14 @@ buildPythonPackage rec {
   '';
 
   disabledTests = [
+    "test_installer_with_pypi_repository"
     # touches network
     "git"
     "solver"
     "load"
     "vcs"
     "prereleases_if_they_are_compatible"
+    "test_builder_setup_generation_runs_with_pip_editable"
     "test_executor"
     # requires git history to work correctly
     "default_with_excluded_data"
@@ -129,6 +137,11 @@ buildPythonPackage rec {
     "lock"
     # fs permission errors
     "test_builder_should_execute_build_scripts"
+    # poetry.installation.chef.ChefBuildError: Backend 'poetry.core.masonry.api' is not available.
+    "test_prepare_sdist"
+    "test_prepare_directory"
+    "test_prepare_directory_with_extensions"
+    "test_prepare_directory_editable"
   ] ++ lib.optionals (pythonAtLeast "3.10") [
     # RuntimeError: 'auto_spec' might be a typo; use unsafe=True if this is intended
     "test_info_setup_complex_pep517_error"
@@ -138,6 +151,11 @@ buildPythonPackage rec {
   pythonNamespaces = [
     "poetry"
   ];
+
+  # Unset ambient PYTHONPATH in the wrapper, so Poetry only ever runs with its own,
+  # isolated set of dependencies. This works because the correct PYTHONPATH is set
+  # in the Python script, which runs after the wrapper.
+  makeWrapperArgs = ["--unset PYTHONPATH"];
 
   meta = with lib; {
     changelog = "https://github.com/python-poetry/poetry/blob/${src.rev}/CHANGELOG.md";

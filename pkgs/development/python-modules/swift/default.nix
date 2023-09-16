@@ -24,11 +24,11 @@
 
 buildPythonPackage rec {
   pname = "swift";
-  version = "2.31.0";
+  version = "2.32.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-gU6XQKiLv6E1OtSjwDunjhNIMK36//arcSsQRwuRtTY=";
+    hash = "sha256-JeDmZx667rG1ARfRBUDTcOWe7u3ZiytZzGQSRp8bpes=";
   };
 
   postPatch = ''

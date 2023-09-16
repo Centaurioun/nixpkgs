@@ -7,19 +7,16 @@
 , cloudpickle
 , cookiecutter
 , diff-match-patch
-, flake8
 , intervaltree
 , jedi
 , jellyfish
 , keyring
 , matplotlib
-, mccabe
 , nbconvert
 , numpy
 , numpydoc
 , psutil
 , pygments
-, pylint
 , pylint-venv
 , pyls-spyder
 , pyopengl
@@ -28,14 +25,13 @@
 , python-lsp-server
 , pyxdg
 , pyzmq
-, pycodestyle
 , qdarkstyle
 , qstylizer
 , qtawesome
 , qtconsole
 , qtpy
 , rope
-, Rtree
+, rtree
 , scipy
 , spyder-kernels
 , textdistance
@@ -45,14 +41,14 @@
 
 buildPythonPackage rec {
   pname = "spyder";
-  version = "5.4.1";
+  version = "5.4.5";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-kQBOYRXhjz+OQk7Vlxb/UKiDi92mA8ialsFQ+QzqhlE=";
+    hash = "sha256-/9p/8avjy1c3Dwos9Byx03kfVrRofVQus+Ae5beFnmo=";
   };
 
   patches = [
@@ -93,7 +89,7 @@ buildPythonPackage rec {
     qtconsole
     qtpy
     rope
-    Rtree
+    rtree
     scipy
     spyder-kernels
     textdistance

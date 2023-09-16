@@ -1,6 +1,6 @@
 { boost
+, cargo
 , cmake
-, config
 , CoreServices
 , cpptoml
 , double-conversion
@@ -21,10 +21,10 @@
 , libunwind
 , lz4
 , openssl
-, pcre
+, pcre2
 , pkg-config
-, python3
 , rustPlatform
+, rustc
 , stateDir ? "/tmp"
 , stdenv
 , wangle
@@ -34,19 +34,20 @@
 
 stdenv.mkDerivation rec {
   pname = "watchman";
-  version = "2023.01.30.00";
+  version = "2023.08.14.00";
 
   src = fetchFromGitHub {
     owner = "facebook";
     repo = "watchman";
     rev = "v${version}";
-    sha256 = "sha256-ZtCUlxx3YgfwKa9J8o9GkdkHquJbh+EytLiGNRlABls=";
+    hash = "sha256-41bBPFlLYFHySyX4/GUllT1pNywSRcH7x/pnb5iN/1o=";
   };
 
   cmakeFlags = [
     "-DBUILD_SHARED_LIBS=ON"
     "-DENABLE_EDEN_SUPPORT=NO" # requires sapling (formerly known as eden), which is not packaged in nixpkgs
     "-DWATCHMAN_STATE_DIR=${stateDir}"
+    "-DWATCHMAN_VERSION_OVERRIDE=${version}"
   ] ++ lib.optionals stdenv.isDarwin [
     "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14" # For aligned allocation
   ];
@@ -55,16 +56,14 @@ stdenv.mkDerivation rec {
     cmake
     pkg-config
     ensureNewerSourcesForZipFilesHook
-  ] ++ (with rustPlatform; [
-    cargoSetupHook
-    rust.cargo
-    rust.rustc
-  ]);
+    rustPlatform.cargoSetupHook
+    cargo
+    rustc
+  ];
 
   buildInputs = [
-    pcre
+    pcre2
     openssl
-    python3
     gtest
     glog
     boost

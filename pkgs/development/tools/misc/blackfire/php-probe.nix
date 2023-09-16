@@ -1,7 +1,6 @@
 { stdenv
 , lib
 , fetchurl
-, dpkg
 , autoPatchelfHook
 , php
 , writeShellScript
@@ -13,67 +12,57 @@
 let
   phpMajor = lib.versions.majorMinor php.version;
 
-  version = "1.86.4";
+  version = "1.89.0";
 
   hashes = {
     "x86_64-linux" = {
       system = "amd64";
-      sha256 = {
-        "8.0" = "lgFetQ7Z9GeNOjhNvNnCJstdytC5OamoCNl9MFyoVww=";
-        "8.1" = "+xbnz3MSBvEV0sST/SGc+wHZe3S7+6HwWL1Gk1wVnJk=";
-        "8.2" = "isMrxPfmj6b4RBzurZX6Qpd/K2V+vP3k6myV57UjtvY=";
+      hash = {
+        "8.1" = "sha256-hRxg33h78MssWo5CuOxN7X0oPxFU6RMkncs751N1lWg=";
+        "8.2" = "sha256-uAat8nfTnYiLfAzn0CRrYwrtXQgHYjZIaSnGI8CNSzI=";
       };
     };
     "i686-linux" = {
       system = "i386";
-      sha256 = {
-        "8.0" = "yLxiJqL698ntQl3IVmTb3nEgwmkFMrqFafT8UQfHOLs=";
-        "8.1" = "eGSs9IAVhpG4al7qbeqOMSxN4OAkI84D7EidTvDgs/s=";
-        "8.2" = "cqYefnX4Q249W5fToX8nCL+BMSRwDBlEXjtxp0mveh4=";
+      hash = {
+        "8.1" = "sha256-DpCfuq4RpI8078Kq8YJYNONpZT2k85jVIjoiFU2Mj64=";
+        "8.2" = "sha256-IWkxjy2GBaFUeIJULRsrLrskh5CNW2DDTK5FJKGRuFM=";
       };
     };
     "aarch64-linux" = {
       system = "arm64";
-      sha256 = {
-        "8.0" = "etASHFAlcGfR3kgtHfs337XL91QwG5e1GzC7D36JhUM=";
-        "8.1" = "dYqP7MjwuJcQNpBSteEV9na0C7pvA4sSHrlQ0NTUDJs=";
-        "8.2" = "+501L16rl5vlD7qFGa0o335GWLaIvrvN2nq11gf+W98=";
+      hash = {
+        "8.1" = "sha256-cTIbsHHJvKIFgXTlH5jog1uoaUVD4ZkPLj78xtEXqVs=";
+        "8.2" = "sha256-IDtVd1aE4rUSLKJRHfdbSB0DUm7rCziTG0jmsmMxaGc=";
       };
     };
     "aarch64-darwin" = {
       system = "arm64";
-      sha256 = {
-        "8.0" = "j2DlfsuQw7y3gxc3JpMxR4d6x7pDYWWCQsA4ilkI8Z4=";
-        "8.1" = "Cg3m2VH1NH54TXe9+2FTpzTHQS2ex+43aJ7XGQqka4o=";
-        "8.2" = "JxMBqYMHkXMeqKuuum4cmTS+2BFq4OIEFmCCMTdlFoU=";
+      hash = {
+        "8.1" = "sha256-HzLdzqoXkN/D+Dh8RnKiMcV56yaO3IHH5EVbaj4QFpI=";
+        "8.2" = "sha256-9Agz1s1/576gz7bRPzCPmox09K16KOR1Ah0eozN6itc=";
       };
     };
     "x86_64-darwin" = {
       system = "amd64";
-      sha256 = {
-        "8.0" = "j1K27FsITfpZzVVDIZJeooNv7iIBL8MTCMJHJCnS9XU=";
-        "8.1" = "JzR7fHg4P0H2I4ldZZYhojsDRVpGlPhg7UMrL4WbLyQ=";
-        "8.2" = "r48LRQlzMPjH11KH3T05x/nCSDmw6KSiiUt78NcKyOk=";
+      hash = {
+        "8.1" = "sha256-GB+IVCISDAtnXSHNXfxXa7eQcx+dRMiP3LC0haha6bI=";
+        "8.2" = "sha256-8EpMJ6kTNw5LDS18zSPUj0r1MsUsAoMPuo4Yn6sWbg8=";
       };
     };
   };
 
-  makeSource =
-    {
-      system,
-      phpMajor,
-    }:
-
+  makeSource = { system, phpMajor }:
     let
       isLinux = builtins.match ".+-linux" system != null;
     in
     assert !isLinux -> (phpMajor != null);
     fetchurl {
-      url =
-        "https://packages.blackfire.io/binaries/blackfire-php/${version}/blackfire-php-${if isLinux then "linux" else "darwin"}_${hashes.${system}.system}-php-${builtins.replaceStrings [ "." ] [ "" ] phpMajor}.so";
-      sha256 = hashes.${system}.sha256.${phpMajor};
+      url = "https://packages.blackfire.io/binaries/blackfire-php/${version}/blackfire-php-${if isLinux then "linux" else "darwin"}_${hashes.${system}.system}-php-${builtins.replaceStrings [ "." ] [ "" ] phpMajor}.so";
+      hash = hashes.${system}.hash.${phpMajor};
     };
-self = stdenv.mkDerivation rec {
+in
+stdenv.mkDerivation (finalAttrs: {
   pname = "php-blackfire";
   extensionName = "blackfire";
   inherit version;
@@ -81,27 +70,26 @@ self = stdenv.mkDerivation rec {
   src = makeSource {
     system = stdenv.hostPlatform.system;
     inherit phpMajor;
-    inherit (php);
   };
 
   nativeBuildInputs = lib.optionals stdenv.isLinux [
     autoPatchelfHook
   ];
 
-  setSourceRoot = "sourceRoot=`pwd`";
+  sourceRoot = ".";
 
   dontUnpack = true;
 
   installPhase = ''
     runHook preInstall
 
-    install -D ${src} $out/lib/php/extensions/blackfire.so
+    install -D ${finalAttrs.src} $out/lib/php/extensions/blackfire.so
 
     runHook postInstall
   '';
 
   passthru = {
-    updateScript = writeShellScript "update-${pname}" ''
+    updateScript = writeShellScript "update-${finalAttrs.pname}" ''
       set -o errexit
       export PATH="${lib.makeBinPath [ curl jq common-updater-scripts ]}"
       NEW_VERSION=$(curl --silent https://blackfire.io/api/v1/releases | jq .probe.php --raw-output)
@@ -111,8 +99,8 @@ self = stdenv.mkDerivation rec {
           exit 0
       fi
 
-      for source in ${lib.concatStringsSep " " (builtins.attrNames passthru.updateables)}; do
-        update-source-version "$UPDATE_NIX_ATTR_PATH.updateables.$source" "0" "${lib.fakeSha256}"
+      for source in ${lib.concatStringsSep " " (builtins.attrNames finalAttrs.passthru.updateables)}; do
+        update-source-version "$UPDATE_NIX_ATTR_PATH.updateables.$source" "0" "sha256-${lib.fakeSha256}"
         update-source-version "$UPDATE_NIX_ATTR_PATH.updateables.$source" "$NEW_VERSION"
       done
     '';
@@ -120,19 +108,16 @@ self = stdenv.mkDerivation rec {
     # All sources for updating by the update script.
     updateables =
       let
-        createName =
-          path:
-
+        createName = path:
           builtins.replaceStrings [ "." ] [ "_" ] (lib.concatStringsSep "_" path);
 
-        createSourceParams =
-          path:
-
+        createSourceParams = path:
           let
             # The path will be either [«system» sha256], or [«system» sha256 «phpMajor» «zts»],
             # Let’s skip the sha256.
             rest = builtins.tail (builtins.tail path);
-          in {
+          in
+          {
             system =
               builtins.head path;
             phpMajor =
@@ -141,19 +126,15 @@ self = stdenv.mkDerivation rec {
               else builtins.head rest;
           };
 
-          createUpdateable =
-            path:
-            _value:
+        createUpdateable = path: _value:
+          lib.nameValuePair
+            (createName path)
+            (finalAttrs.finalPackage.overrideAttrs (attrs: {
+              src = makeSource (createSourceParams path);
+            }));
 
-            lib.nameValuePair
-              (createName path)
-              (self.overrideAttrs (attrs: {
-                src = makeSource (createSourceParams path);
-              }));
-
-          hashesOnly =
-            # Filter out all attributes other than hashes.
-            lib.filterAttrsRecursive (name: _value: name != "system") hashes;
+        # Filter out all attributes other than hashes.
+        hashesOnly = lib.filterAttrsRecursive (name: _value: name != "system") hashes;
       in
       builtins.listToAttrs
         # Collect all leaf attributes (containing hashes).
@@ -162,14 +143,12 @@ self = stdenv.mkDerivation rec {
           (lib.mapAttrsRecursive createUpdateable hashesOnly));
   };
 
-  meta = with lib; {
+  meta = {
     description = "Blackfire Profiler PHP module";
     homepage = "https://blackfire.io/";
-    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    license = licenses.unfree;
-    maintainers = with maintainers; [ shyim ];
+    license = lib.licenses.unfree;
+    maintainers = with lib.maintainers; [ shyim ];
     platforms = [ "x86_64-linux" "aarch64-linux" "i686-linux" "x86_64-darwin" "aarch64-darwin" ];
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
   };
-};
-in
-self
+})

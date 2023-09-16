@@ -1,13 +1,13 @@
 { stdenv, lib, fetchFromGitHub, kernel }:
 
 stdenv.mkDerivation rec {
-  name = "vmm_clock";
+  pname = "vmm_clock";
   version = "0.2.0";
 
   src = fetchFromGitHub {
     owner = "voutilad";
     repo = "vmm_clock";
-    rev = "${version}";
+    rev = version;
     hash = "sha256-8z/N/dbkeFd40sH7jatNmSS62B88tC0jVgNljhxslOo=";
   };
 

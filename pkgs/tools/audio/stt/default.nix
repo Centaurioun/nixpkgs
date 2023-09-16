@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, autoPatchelfHook, bzip2, lzma }:
+{ stdenv, lib, fetchurl, autoPatchelfHook, bzip2, xz }:
 
 stdenv.mkDerivation rec {
   pname = "stt";
@@ -8,7 +8,8 @@ stdenv.mkDerivation rec {
     url = "https://github.com/coqui-ai/STT/releases/download/v${version}/native_client.tflite.Linux.tar.xz";
     hash = "sha256-RVYc64pLYumQoVUEFZdxfUUaBMozaqgD0h/yiMaWN90=";
   };
-  setSourceRoot = "sourceRoot=`pwd`";
+
+  sourceRoot = ".";
 
   nativeBuildInputs = [
     autoPatchelfHook
@@ -16,7 +17,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     bzip2
-    lzma
+    xz
     stdenv.cc.cc.lib
   ];
 

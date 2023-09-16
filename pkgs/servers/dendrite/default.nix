@@ -1,24 +1,22 @@
-{ lib, buildGoModule, fetchFromGitHub
+{ lib, buildGoModule, fetchFromGitHub, nix-update-script
 , nixosTests, postgresql, postgresqlTestHook }:
 
 buildGoModule rec {
   pname = "matrix-dendrite";
-  version = "0.11.0";
+  version = "0.13.2";
 
   src = fetchFromGitHub {
     owner = "matrix-org";
     repo = "dendrite";
     rev = "v${version}";
-    sha256 = "sha256-EJUHpV+ZsMMSMsJGhF0Atblksg5rgI3a2qcRxLyZP38=";
+    hash = "sha256-I8k3E/7RXJFIaEX1Zw6oFDT6UkQvZBZuyTxUZZQYr+s=";
   };
 
-  vendorHash = "sha256-Ygd5wC4j0kAbEMMVct5WXZvkcYSqqK8d7ZZ9CDU1RHU=";
+  vendorHash = "sha256-H2wtGjGTzqN8OXAI2ksCBgTJsmJYLQu5aFu9OP03/DA=";
 
   subPackages = [
-    # The server as a monolith: https://matrix-org.github.io/dendrite/installation/install/monolith
-    "cmd/dendrite-monolith-server"
-    # The server as a polylith: https://matrix-org.github.io/dendrite/installation/install/polylith
-    "cmd/dendrite-polylith-multi"
+    # The server
+    "cmd/dendrite"
     # admin tools
     "cmd/create-account"
     "cmd/generate-config"
@@ -31,7 +29,6 @@ buildGoModule rec {
     ## tech demos
     # "cmd/dendrite-demo-pinecone"
     # "cmd/dendrite-demo-yggdrasil"
-    # "cmd/dendritejs-pinecone"
   ];
 
   nativeCheckInputs = [
@@ -49,6 +46,9 @@ buildGoModule rec {
 
   passthru.tests = {
     inherit (nixosTests) dendrite;
+  };
+  passthru.updateScript = nix-update-script {
+    extraArgs = [ "--version-regex" "v(.+)" ];
   };
 
   meta = with lib; {

@@ -19,7 +19,7 @@ buildPythonPackage rec {
     owner = "xZise";
     repo = "flake8-future-import";
     rev = "refs/tags/${version}";
-    sha256 = "sha256-2EcCOx3+PCk9LYpQjHCFNpQVI2Pdi+lWL8R6bNadFe0=";
+    hash = "sha256-2EcCOx3+PCk9LYpQjHCFNpQVI2Pdi+lWL8R6bNadFe0=";
   };
 
   patches = lib.optionals (pythonAtLeast "3.10") [
@@ -33,12 +33,21 @@ buildPythonPackage rec {
     ./skip-test.patch
   ];
 
+  postPatch = ''
+    substituteInPlace "test_flake8_future_import.py" \
+      --replace "'flake8'" "'${lib.getExe flake8}'"
+  '';
+
   propagatedBuildInputs = [ flake8 ];
 
   nativeCheckInputs = [ six ];
 
   checkPhase = ''
+    runHook preCheck
+
     ${python.interpreter} -m test_flake8_future_import
+
+    runHook postCheck
   '';
 
   meta = with lib; {

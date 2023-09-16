@@ -2,12 +2,14 @@
 , lib
 , fetchFromGitHub
 , fetchpatch
+, nixosTests
 , dtkwidget
 , qt5integration
 , qt5platform-plugins
 , dde-qt-dbus-factory
 , cmake
 , qtbase
+, qtsvg
 , qttools
 , qtx11extras
 , pkg-config
@@ -16,27 +18,18 @@
 , libsecret
 , chrpath
 , lxqt
-, gtest
 }:
 
 stdenv.mkDerivation rec {
   pname = "deepin-terminal";
-  version = "5.4.34";
+  version = "6.0.6";
 
   src = fetchFromGitHub {
     owner = "linuxdeepin";
     repo = pname;
     rev = version;
-    sha256 = "sha256-CpI7dyQwrYOYzqVZ6aa+/OAUC3xRyY4ZwzH1mqURTfY=";
+    hash = "sha256-LzCbh+BErgh7Ojbw314oHB8QvyS6UeJkDUkNngzVm+A=";
   };
-
-  patches = [
-    (fetchpatch {
-      name = "chore: use GNUInstallDirs in CmakeLists";
-      url = "https://github.com/linuxdeepin/deepin-terminal/commit/b18a2ca8411f09f5573aa2a8403a484b693ec975.patch";
-      sha256 = "sha256-Qy8Jg+7BfZr8tQEsCAzhMEwf6rU96gkgup5f9bMMELY=";
-    })
-  ];
 
   cmakeFlags = [ "-DVERSION=${version}" ];
 
@@ -49,22 +42,21 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    dtkwidget
+    qt5integration
     qt5platform-plugins
+    qtbase
+    qtsvg
+    dtkwidget
     dde-qt-dbus-factory
     qtx11extras
     at-spi2-core
     libsecret
     chrpath
-    gtest
   ];
 
   strictDeps = true;
 
-  # qt5integration must be placed before qtsvg in QT_PLUGIN_PATH
-  qtWrapperArgs = [
-    "--prefix QT_PLUGIN_PATH : ${qt5integration}/${qtbase.qtPluginPrefix}"
-  ];
+  passthru.tests.test = nixosTests.terminal-emulators.deepin-terminal;
 
   meta = with lib; {
     description = "Terminal emulator with workspace, multiple windows, remote management, quake mode and other features";

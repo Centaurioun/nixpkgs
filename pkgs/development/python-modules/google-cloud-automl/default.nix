@@ -16,14 +16,14 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-automl";
-  version = "2.10.1";
+  version = "2.11.2";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-pS/fm9837vmdvh6msk69nTeo/gj1StxsfFf6DsmOQE4=";
+    hash = "sha256-w4kzOe8az6zcMLoNYbfkvC5Aq5zCbSNw6+PHYZkEZqI=";
   };
 
   propagatedBuildInputs = [
@@ -79,6 +79,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/googleapis/python-automl";
     changelog = "https://github.com/googleapis/python-automl/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

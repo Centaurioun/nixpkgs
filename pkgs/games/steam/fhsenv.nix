@@ -1,10 +1,11 @@
-{ lib, stdenv, writeScript, buildFHSUserEnv, steam, glxinfo-i686, runtimeShell
+{ lib, stdenv, writeShellScript, buildFHSEnv, steam, glxinfo-i686
 , steam-runtime-wrapped, steam-runtime-wrapped-i686 ? null
 , extraPkgs ? pkgs: [ ] # extra packages to add to targetPkgs
 , extraLibraries ? pkgs: [ ] # extra packages to add to multiPkgs
 , extraProfile ? "" # string to append to profile
 , extraArgs ? "" # arguments to always pass to steam
-, withGameSpecificLibraries ? true # exclude game specific libraries
+, extraEnv ? { } # Environment variables to pass to Steam
+, withGameSpecificLibraries ? true # include game specific libraries
 }:
 
 let
@@ -27,6 +28,9 @@ let
     # Steam VR
     procps
     usbutils
+
+    # It tries to execute xdg-user-dir and spams the log with command not founds
+    xdg-user-dirs
 
     # electron based launchers need newer versions of these libraries than what runtime provides
     mesa
@@ -52,11 +56,16 @@ let
     fi
   '';
 
-in buildFHSUserEnv rec {
+  envScript = lib.toShellVars extraEnv;
+
+in buildFHSEnv rec {
   name = "steam";
 
+  # Steam still needs 32bit and various native games do too
+  multiArch = true;
+
   targetPkgs = pkgs: with pkgs; [
-    steamPackages.steam
+    steam
     # License agreement
     gnome.zenity
   ] ++ commonTargetPkgs pkgs;
@@ -110,6 +119,7 @@ in buildFHSUserEnv rec {
     SDL2
     libusb1
     dbus-glib
+    gsettings-desktop-schemas
     ffmpeg
     libudev0-shim
 
@@ -127,6 +137,10 @@ in buildFHSUserEnv rec {
     libidn
     tbb
     zlib
+
+    # SteamVR
+    udev
+    dbus
 
     # Other things from runtime
     glib
@@ -158,6 +172,13 @@ in buildFHSUserEnv rec {
     librsvg
     xorg.libXft
     libvdpau
+
+    # required by coreutils stuff to run correctly
+    # Steam ends up with LD_LIBRARY_PATH=<bunch of runtime stuff>:/usr/lib:<etc>
+    # which overrides DT_RUNPATH in our binaries, so it tries to dynload the
+    # very old versions of stuff from the runtime.
+    # FIXME: how do we even fix this correctly
+    attr
   ] ++ lib.optionals withGameSpecificLibraries [
     # Not formally in runtime but needed by some games
     at-spi2-atk
@@ -171,15 +192,15 @@ in buildFHSUserEnv rec {
     libvorbis # Dead Cells
     libxcrypt # Alien Isolation, XCOM 2, Company of Heroes 2
     mono
+    ncurses # Crusader Kings III
+    openssl
     xorg.xkeyboardconfig
     xorg.libpciaccess
     xorg.libXScrnSaver # Dead Cells
-    udev # Shadow of the Tomb Raider
     icu # dotnet runtime, e.g. Stardew Valley
 
     # screeps dependencies
     gtk3
-    dbus
     zlib
     atk
     cairo
@@ -194,15 +215,17 @@ in buildFHSUserEnv rec {
     alsa-lib
 
     # Loop Hero
+    # FIXME: Also requires openssl_1_1, which is EOL. Either find an alternative solution, or remove these dependencies (if not needed by other games)
     libidn2
     libpsl
     nghttp2.lib
-    openssl_1_1
     rtmpdump
-  ] ++ steamPackages.steam-runtime-wrapped.overridePkgs
+  ]
+  # This needs to come from pkgs as the passed-in steam-runtime-wrapped may not be the same architecture
+  ++ pkgs.steamPackages.steam-runtime-wrapped.overridePkgs
   ++ extraLibraries pkgs;
 
-  extraInstallCommands = ''
+  extraInstallCommands = lib.optionalString (steam != null) ''
     mkdir -p $out/share/applications
     ln -s ${steam}/share/icons $out/share
     ln -s ${steam}/share/pixmaps $out/share
@@ -228,8 +251,7 @@ in buildFHSUserEnv rec {
     export SDL_JOYSTICK_DISABLE_UDEV=1
   '' + extraProfile;
 
-  runScript = writeScript "steam-wrapper.sh" ''
-    #!${runtimeShell}
+  runScript = writeShellScript "steam-wrapper.sh" ''
     if [ -f /host/etc/NIXOS ]; then   # Check only useful on NixOS
       ${glxinfo-i686}/bin/glxinfo >/dev/null 2>&1
       # If there was an error running glxinfo, we know something is wrong with the configuration
@@ -249,12 +271,21 @@ in buildFHSUserEnv rec {
 
     ${exportLDPath}
     ${fixBootstrap}
+
+    set -o allexport # Export the following env vars
+    ${envScript}
     exec steam ${extraArgs} "$@"
   '';
 
-  meta = steam.meta // lib.optionalAttrs (!withGameSpecificLibraries) {
-    description = steam.meta.description + " (without game specific libraries)";
-  };
+  meta =
+    if steam != null
+    then
+      steam.meta // lib.optionalAttrs (!withGameSpecificLibraries) {
+        description = steam.meta.description + " (without game specific libraries)";
+      }
+    else {
+      description = "Steam dependencies (dummy package, do not use)";
+    };
 
   # allows for some gui applications to share IPC
   # this fixes certain issues where they don't render correctly
@@ -265,15 +296,14 @@ in buildFHSUserEnv rec {
   # breaks the ability for application to reference shared memory.
   unsharePid = false;
 
-  passthru.run = buildFHSUserEnv {
+  passthru.run = buildFHSEnv {
     name = "steam-run";
 
     targetPkgs = commonTargetPkgs;
-    inherit multiPkgs profile extraInstallCommands;
+    inherit multiArch multiPkgs profile extraInstallCommands;
     inherit unshareIpc unsharePid;
 
-    runScript = writeScript "steam-run" ''
-      #!${runtimeShell}
+    runScript = writeShellScript "steam-run" ''
       run="$1"
       if [ "$run" = "" ]; then
         echo "Usage: steam-run command-to-run args..." >&2
@@ -283,10 +313,13 @@ in buildFHSUserEnv rec {
 
       ${exportLDPath}
       ${fixBootstrap}
+
+      set -o allexport # Export the following env vars
+      ${envScript}
       exec -- "$run" "$@"
     '';
 
-    meta = steam.meta // {
+    meta = (steam.meta or {}) // {
       description = "Run commands in the same FHS environment that is used for Steam";
       name = "steam-run";
     };

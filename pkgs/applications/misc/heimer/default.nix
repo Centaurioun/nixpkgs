@@ -8,13 +8,13 @@
 
 mkDerivation rec {
   pname = "heimer";
-  version = "3.7.0";
+  version = "4.2.0";
 
   src = fetchFromGitHub {
     owner = "juzzlin";
     repo = pname;
     rev = version;
-    hash = "sha256-tcA7+3gp/CFpapCL4yt3xG12sm+LcnRIoB/caJlKF8A=";
+    hash = "sha256-Z94e+4WwabHncBr4Gsv0AkZHyrbFCCIpumGbANHX6dU=";
   };
 
   nativeBuildInputs = [

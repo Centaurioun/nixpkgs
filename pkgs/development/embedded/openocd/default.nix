@@ -3,9 +3,15 @@
 , fetchurl
 , pkg-config
 , hidapi
-, libftdi1
+, jimtcl
+, libjaylink
 , libusb1
 , libgpiod
+
+, enableFtdi ? true, libftdi1
+
+# Allow selection the hardware targets (SBCs, JTAG Programmers, JTAG Adapters)
+, extraHardwareSupport ? []
 }:
 
 stdenv.mkDerivation rec {
@@ -18,23 +24,32 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [ hidapi libftdi1 libusb1 ]
-    ++ lib.optional stdenv.isLinux libgpiod;
+  buildInputs = [ hidapi jimtcl libftdi1 libjaylink libusb1 ]
+    ++
+    # tracking issue for v2 api changes https://sourceforge.net/p/openocd/tickets/306/
+    lib.optional stdenv.isLinux (libgpiod.overrideAttrs (old: rec {
+      version = "1.6.4";
+      src = fetchurl {
+        url = "https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/snapshot/libgpiod-${version}.tar.gz";
+        sha256 = "sha256-gp1KwmjfB4U2CdZ8/H9HbpqnNssqaKYwvpno+tGXvgo=";
+      };
+    }));
 
   configureFlags = [
     "--disable-werror"
+    "--disable-internal-jimtcl"
+    "--disable-internal-libjaylink"
     "--enable-jtag_vpi"
-    "--enable-usb_blaster_libftdi"
-    (lib.enableFeature (! stdenv.isDarwin) "amtjtagaccel")
-    (lib.enableFeature (! stdenv.isDarwin) "gw16012")
-    "--enable-presto_libftdi"
-    "--enable-openjtag_ftdi"
-    (lib.enableFeature (! stdenv.isDarwin) "oocd_trace")
     "--enable-buspirate"
-    (lib.enableFeature stdenv.isLinux "sysfsgpio")
-    (lib.enableFeature stdenv.isLinux "linuxgpiod")
     "--enable-remote-bitbang"
-  ];
+    (lib.enableFeature enableFtdi "ftdi")
+    (lib.enableFeature stdenv.isLinux "linuxgpiod")
+    (lib.enableFeature stdenv.isLinux "sysfsgpio")
+  ] ++
+    map (hardware: "--enable-${hardware}") extraHardwareSupport
+  ;
+
+  enableParallelBuilding = true;
 
   env.NIX_CFLAGS_COMPILE = toString (lib.optionals stdenv.cc.isGNU [
     "-Wno-error=cpp"

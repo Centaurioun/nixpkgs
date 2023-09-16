@@ -3,15 +3,15 @@
 , buildPythonPackage
 , fetchFromGitHub
 , poetry-core
-, pytestCheckHook
 , pythonOlder
+, pythonRelaxDepsHook
 , rapidfuzz
 , requests
 }:
 
 buildPythonPackage rec {
   pname = "syncedlyrics";
-  version = "0.4.0";
+  version = "0.6.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
@@ -20,11 +20,16 @@ buildPythonPackage rec {
     owner = "rtcq";
     repo = pname;
     rev = "refs/tags/v${version}";
-    hash = "sha256-dH9irIah9CdZ9Kv7bIymP1o5ifWEYCiSqegUpu8Y+Tg=";
+    hash = "sha256-SVB6hlVBk+0nNfJjp5zdv4A6FmVt1/NV4ov6qS1DlLI=";
   };
 
   nativeBuildInputs = [
     poetry-core
+    pythonRelaxDepsHook
+  ];
+
+  pythonRelaxDeps = [
+    "rapidfuzz"
   ];
 
   propagatedBuildInputs = [
@@ -33,16 +38,11 @@ buildPythonPackage rec {
     beautifulsoup4
   ];
 
-  nativeCheckInputs = [
-    pytestCheckHook
-  ];
+  # Tests require network access
+  doCheck = false;
 
   pythonImportsCheck = [
     "syncedlyrics"
-  ];
-
-  pytestFlagsArray = [
-    "test.py::test_all_providers"
   ];
 
   meta = with lib; {

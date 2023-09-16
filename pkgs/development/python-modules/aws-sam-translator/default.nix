@@ -3,7 +3,6 @@
 , buildPythonPackage
 , fetchFromGitHub
 , jsonschema
-, mock
 , parameterized
 , pydantic
 , pytest-env
@@ -17,17 +16,22 @@
 
 buildPythonPackage rec {
   pname = "aws-sam-translator";
-  version = "1.55.0";
+  version = "1.73.0";
   format = "setuptools";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "aws";
     repo = "serverless-application-model";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-YDqdd4zKInttHDl04kvAgHKtc1vBryW12QfE0wiLU54=";
+    hash = "sha256-rj+q/06gIvPYTJP/EH9ZrP0Sp4J3K1aCRyNkgpphWP4=";
   };
+
+  postPatch = ''
+    substituteInPlace pytest.ini \
+      --replace " --cov samtranslator --cov-report term-missing --cov-fail-under 95" ""
+  '';
 
   propagatedBuildInputs = [
     boto3
@@ -36,15 +40,7 @@ buildPythonPackage rec {
     typing-extensions
   ];
 
-  postPatch = ''
-    substituteInPlace requirements/base.txt \
-      --replace "jsonschema~=3.2" "jsonschema>=3.2"
-    substituteInPlace pytest.ini \
-      --replace " --cov samtranslator --cov-report term-missing --cov-fail-under 95" ""
-  '';
-
   nativeCheckInputs = [
-    mock
     parameterized
     pytest-env
     pytest-rerunfailures
@@ -53,28 +49,18 @@ buildPythonPackage rec {
     pyyaml
   ];
 
-  disabledTests = [
-    # AssertionError: Expected 7 errors, found 9:
-    "test_errors_13_error_definitionuri"
-  ];
-
-  pytestFlagsArray = [
-    # samtranslator.translator.arn_generator.NoRegionFound: AWS Region cannot be found
-    "--deselect tests/plugins/application/test_serverless_app_plugin.py::TestServerlessAppPlugin_on_before_transform_template_translate::test_sar_success_one_app"
-    "--deselect tests/plugins/application/test_serverless_app_plugin.py::TestServerlessAppPlugin_on_before_transform_template_translate::test_sar_throttling_doesnt_stop_processing"
-    "--deselect tests/plugins/application/test_serverless_app_plugin.py::TestServerlessAppPlugin_on_before_transform_template_translate::test_sleep_between_sar_checks"
-    "--deselect tests/plugins/application/test_serverless_app_plugin.py::TestServerlessAppPlugin_on_before_transform_template_translate::test_unexpected_sar_error_stops_processing"
-    "--deselect tests/plugins/application/test_serverless_app_plugin.py::TestServerlessAppPlugin_on_before_and_on_after_transform_template::test_time_limit_exceeds_between_combined_sar_calls"
-    "--deselect tests/unit/test_region_configuration.py::TestRegionConfiguration::test_is_service_supported_positive_4_ec2"
-  ];
-
   pythonImportsCheck = [
     "samtranslator"
   ];
 
+  preCheck = ''
+    sed -i '2ienv =\n\tAWS_DEFAULT_REGION=us-east-1' pytest.ini
+  '';
+
   meta = with lib; {
     description = "Python library to transform SAM templates into AWS CloudFormation templates";
     homepage = "https://github.com/awslabs/serverless-application-model";
+    changelog = "https://github.com/aws/serverless-application-model/releases/tag/v${version}";
     license = licenses.asl20;
     maintainers = with maintainers; [ ];
   };

@@ -1,11 +1,12 @@
 { lib
 , stdenv
 , fetchFromGitHub
-, fetchpatch
+, cargo
 , cmake
 , ninja
 , pkg-config
 , rustPlatform
+, rustc
 , curl
 , freetype
 , libGLU
@@ -33,27 +34,27 @@
 
 stdenv.mkDerivation rec {
   pname = "ddnet";
-  version = "16.7.2";
+  version = "17.2.1";
 
   src = fetchFromGitHub {
     owner = "ddnet";
     repo = pname;
     rev = version;
-    hash = "sha256-dK46ubcq/sYSXLeZwAeomj9+jpSNpgHsTmXKdrllLTc=";
+    hash = "sha256-FJnwabNEEGZDM9wNWMGclFv2IMlXg4Ob3PEbGiGQKKc=";
   };
 
   cargoDeps = rustPlatform.fetchCargoTarball {
     name = "${pname}-${version}";
     inherit src;
-    hash = "sha256-jLR/XriiKXmpHGBHtPa1vpE5ms3Dw1wrNt/4KARyM74=";
+    hash = "sha256-hUrsumBiKovSD7xT1PgH2Q+7HYgyxnFnz33YJPdd5+c=";
   };
 
   nativeBuildInputs = [
     cmake
     ninja
     pkg-config
-    rustPlatform.rust.rustc
-    rustPlatform.rust.cargo
+    rustc
+    cargo
     rustPlatform.cargoSetupHook
   ];
 
@@ -81,15 +82,6 @@ stdenv.mkDerivation rec {
     glslang
     spirv-tools
   ] ++ lib.optionals stdenv.isDarwin [ Carbon Cocoa OpenGL Security ];
-
-  patches = [
-    (fetchpatch {
-      # error: use of undeclared identifier 'pthread_attr_set_qos_class_np'
-      # https://github.com/ddnet/ddnet/pull/5913
-      url = "https://github.com/ddnet/ddnet/pull/5913/commits/ccc6cd59de58905dce3a3bd5d8461a03b1adb249.patch";
-      hash = "sha256-CkHckE+bOMKDcoijNYDo+zEQ9Eq9ePDV18LybzCMPYs=";
-    })
-  ];
 
   postPatch = ''
     substituteInPlace src/engine/shared/storage.cpp \

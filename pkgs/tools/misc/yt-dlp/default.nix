@@ -9,6 +9,7 @@
 , pycryptodomex
 , websockets
 , mutagen
+, secretstorage
 , atomicparsleySupport ? true
 , ffmpegSupport ? true
 , rtmpSupport ? true
@@ -21,14 +22,21 @@ buildPythonPackage rec {
   # The websites yt-dlp deals with are a very moving target. That means that
   # downloads break constantly. Because of that, updates should always be backported
   # to the latest stable release.
-  version = "2023.2.17";
+  version = "2023.7.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-mvkt5e/8GTvbUSFtnr8oh02WGA0gL651Kw2fKmM4Dzo=";
+    sha256 = "sha256-y1g3OGnIzLUDR0b5HPzNbSXqaXCQ39b5PpA01R60rtI=";
   };
 
-  propagatedBuildInputs = [ brotli certifi mutagen pycryptodomex websockets ];
+  propagatedBuildInputs = [
+    brotli
+    certifi
+    mutagen
+    pycryptodomex
+    secretstorage  # "optional", as in not in requirements.txt, needed for `--cookies-from-browser`
+    websockets
+  ];
 
   # Ensure these utilities are available in $PATH:
   # - ffmpeg: post-processing & transcoding support
@@ -69,5 +77,6 @@ buildPythonPackage rec {
     '';
     license = licenses.unlicense;
     maintainers = with maintainers; [ mkg20001 SuperSandro2000 marsam ];
+    mainProgram = "yt-dlp";
   };
 }

@@ -2,6 +2,7 @@
 , buildPythonPackage
 , dissect-cim
 , dissect-clfs
+, dissect-cobaltstrike
 , dissect-cstruct
 , dissect-esedb
 , dissect-etl
@@ -31,16 +32,16 @@
 
 buildPythonPackage rec {
   pname = "dissect";
-  version = "3.4";
+  version = "3.8.1";
   format = "pyproject";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8.1";
 
   src = fetchFromGitHub {
     owner = "fox-it";
     repo = "dissect";
     rev = "refs/tags/${version}";
-    hash = "sha256-+t6v553lP9NEimNlp48NQ+6dpIOrgfZ1FU3LNJF44YY=";
+    hash = "sha256-WbKzmLeGsvzFA/bTTCqBEj/unbnzKQFzHFPRG411Cos=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;
@@ -53,6 +54,7 @@ buildPythonPackage rec {
   propagatedBuildInputs = [
     dissect-cim
     dissect-clfs
+    dissect-cobaltstrike
     dissect-cstruct
     dissect-esedb
     dissect-etl
