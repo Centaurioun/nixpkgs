@@ -10,7 +10,7 @@ in
   ###### interface
   options = {
     services.bird2 = {
-      enable = mkEnableOption "BIRD Internet Routing Daemon";
+      enable = mkEnableOption (lib.mdDoc "BIRD Internet Routing Daemon");
       config = mkOption {
         type = types.lines;
         description = lib.mdDoc ''
@@ -61,7 +61,7 @@ in
       checkPhase = optionalString cfg.checkConfig ''
         ln -s $out bird2.conf
         ${cfg.preCheckConfig}
-        ${pkgs.bird}/bin/bird -d -p -c bird2.conf
+        ${pkgs.buildPackages.bird}/bin/bird -d -p -c bird2.conf
       '';
     };
 

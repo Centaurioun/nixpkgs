@@ -1,22 +1,24 @@
-{ dpkg, fetchurl, lib, stdenv }:
+{ squashfsTools, fetchurl, lib, stdenv }:
 
+# This derivation roughly follows the update-ffmpeg script that ships with the official Vivaldi
+# downloads at https://vivaldi.com/download/
 stdenv.mkDerivation rec {
   pname = "chromium-codecs-ffmpeg-extra";
-  version = "104.0.5112.79";
+  version = "111306";
 
   src = fetchurl {
-    url = "https://launchpadlibrarian.net/616178945/${pname}_${version}-0ubuntu0.18.04.1_amd64.deb";
-    sha256 = "sha256-JL14+2TsX1qXfRpA/tAADC0iujPj37ld6T9yPUD8R38=";
+    url = "https://api.snapcraft.io/api/v1/snaps/download/XXzVIXswXKHqlUATPqGCj2w2l7BxosS8_34.snap";
+    sha256 = "sha256-Dna9yFgP7JeQLAeZWvSZ+eSMX2yQbX2/+mX0QC22lYY=";
   };
 
-  buildInputs = [ dpkg ];
+  buildInputs = [ squashfsTools ];
 
   unpackPhase = ''
-    dpkg-deb -x $src .
+    unsquashfs -dest . $src
   '';
 
   installPhase = ''
-    install -vD usr/lib/chromium-browser/libffmpeg.so $out/lib/libffmpeg.so
+    install -vD chromium-ffmpeg-${version}/chromium-ffmpeg/libffmpeg.so $out/lib/libffmpeg.so
   '';
 
   meta = with lib; {
@@ -24,7 +26,7 @@ stdenv.mkDerivation rec {
     homepage    = "https://ffmpeg.org/";
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license     = licenses.lgpl21;
-    maintainers = with maintainers; [ betaboon cawilliamson lluchs ];
+    maintainers = with maintainers; [ betaboon cawilliamson fptje ];
     platforms   = [ "x86_64-linux" ];
   };
 }

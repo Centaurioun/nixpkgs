@@ -1,5 +1,5 @@
 { lib
-, buildPythonApplication
+, buildPythonPackage
 , fetchPypi
 , installShellFiles
 , mock
@@ -10,17 +10,24 @@
 , stestr
 }:
 
-buildPythonApplication rec {
+buildPythonPackage rec {
   pname = "python-swiftclient";
-  version = "4.0.1";
+  version = "4.4.0";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-O2jHNpnF+8OKzXtvEUPWmSOz+vcQ82XZd6QQS9kni/8=";
+    hash = "sha256-p32Xqw5AEsZ4cy5XW9/u0oKzSJuRdegsRqR6yEke7oQ=";
   };
+
+  # remove duplicate script that will be created by setuptools from the
+  # entry_points section of setup.cfg
+  postPatch = ''
+    sed -i '/^scripts =/d' setup.cfg
+    sed -i '/bin\/swift/d' setup.cfg
+  '';
 
   nativeBuildInputs = [
     installShellFiles
@@ -31,7 +38,7 @@ buildPythonApplication rec {
     python-keystoneclient
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     mock
     openstacksdk
     stestr

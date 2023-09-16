@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "cmctl";
-  version = "1.9.1";
+  version = "1.11.2";
 
   src = fetchFromGitHub {
     owner = "cert-manager";
     repo = "cert-manager";
-    rev = "v${version}";
-    hash = "sha256-Z1aJ18X4mfJPlCPBC7QgfdX5Tk4+PK8mYoJZhGwz9ec=";
+    rev = "4767427a40e0e193c976fd6bc228f50de8950572";
+    sha256 = "128s5vd4hp5mr0rnb21grzmijzx0ibpv71as36dcgw7z4v3gq7lx";
   };
 
-  vendorSha256 = "sha256-45+tZZAEHaLdTN1NQCueJVTx5x2IanwDl+Y9MELqdBE=";
+  vendorHash = "sha256-+r0QpD97r6dokUr07Qjb9kvoK+oz2rvml0cIebtYuHg=";
 
   subPackages = [ "cmd/ctl" ];
 
@@ -19,6 +19,8 @@ buildGoModule rec {
     "-s" "-w"
     "-X github.com/cert-manager/cert-manager/cmd/ctl/pkg/build.name=cmctl"
     "-X github.com/cert-manager/cert-manager/cmd/ctl/pkg/build/commands.registerCompletion=true"
+    "-X github.com/cert-manager/cert-manager/pkg/util.AppVersion=v${version}"
+    "-X github.com/cert-manager/cert-manager/pkg/util.AppGitCommit=${src.rev}"
   ];
 
   nativeBuildInputs = [ installShellFiles ];
@@ -30,6 +32,8 @@ buildGoModule rec {
       --fish <($out/bin/cmctl completion fish) \
       --zsh <($out/bin/cmctl completion zsh)
   '';
+
+  passthru.updateScript = ./update.sh;
 
   meta = with lib; {
     description = "A CLI tool for managing cert-manager service on Kubernetes clusters";
@@ -46,7 +50,6 @@ buildGoModule rec {
     downloadPage = "https://github.com/cert-manager/cert-manager";
     license = licenses.asl20;
     homepage = "https://cert-manager.io/";
-    maintainers = with maintainers; [ joshvanl superherointj ];
+    maintainers = with maintainers; [ joshvanl ];
   };
 }
-

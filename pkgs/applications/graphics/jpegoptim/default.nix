@@ -1,14 +1,14 @@
 { lib, stdenv, fetchFromGitHub, libjpeg }:
 
 stdenv.mkDerivation rec {
-  version = "1.4.7";
+  version = "1.5.5";
   pname = "jpegoptim";
 
   src = fetchFromGitHub {
     owner = "tjko";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-qae3OEG4CC/OGkmNdHrXFUv9CkoaB1ZJnFHX3RFoxhk=";
+    sha256 = "sha256-3p3kcUur1u09ROdKXG5H8eilu463Rzbn2yfYo5o6+KM=";
   };
 
   # There are no checks, it seems.

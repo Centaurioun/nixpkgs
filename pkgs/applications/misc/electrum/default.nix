@@ -2,30 +2,20 @@
 , stdenv
 , fetchurl
 , fetchFromGitHub
-, fetchpatch
 , wrapQtAppsHook
 , python3
 , zbar
 , secp256k1
 , enableQt ? true
-# for updater.nix
-, writeScript
-, common-updater-scripts
-, bash
-, coreutils
-, curl
-, gnugrep
-, gnupg
-, gnused
-, nix
+, callPackage
 }:
 
 let
-  version = "4.3.0";
+  version = "4.4.6";
 
   libsecp256k1_name =
-    if stdenv.isLinux then "libsecp256k1.so.0"
-    else if stdenv.isDarwin then "libsecp256k1.0.dylib"
+    if stdenv.isLinux then "libsecp256k1.so.{v}"
+    else if stdenv.isDarwin then "libsecp256k1.{v}.dylib"
     else "libsecp256k1${stdenv.hostPlatform.extensions.sharedLibrary}";
 
   libzbar_name =
@@ -38,7 +28,7 @@ let
     owner = "spesmilo";
     repo = "electrum";
     rev = version;
-    sha256 = "sha256-/bYz2KB9Fggo6cnKM3hvwL/Jy4Xsw2phx1sInuqZpFg=";
+    sha256 = "sha256-nd435CgF0a6JOni/OXcxkciVCR1aQqzfGfDSg1gPQ8Q=";
 
     postFetch = ''
       mv $out ./all
@@ -54,7 +44,7 @@ python3.pkgs.buildPythonApplication {
 
   src = fetchurl {
     url = "https://download.electrum.org/${version}/Electrum-${version}.tar.gz";
-    sha256 = "sha256-E941wseIQEn1+d06NWKQLQM0C+A8a0+Xxl+LzBTwEcw=";
+    sha256 = "sha256-BxxC1xVKToUjgBo4mEeK9Tdhbd/+doHcTTJsXDtaELg=";
   };
 
   postUnpack = ''
@@ -81,7 +71,8 @@ python3.pkgs.buildPythonApplication {
     requests
     tlslite-ng
     # plugins
-    btchip
+    btchip-python
+    ledger-bitcoin
     ckcc-protocol
     keepkey
     trezor
@@ -90,7 +81,13 @@ python3.pkgs.buildPythonApplication {
     qdarkstyle
   ];
 
-  preBuild = ''
+  postPatch = ''
+    # make compatible with protobuf4 by easing dependencies ...
+    substituteInPlace ./contrib/requirements/requirements.txt \
+      --replace "protobuf>=3.20,<4" "protobuf>=3.20"
+    # ... and regenerating the paymentrequest_pb2.py file
+    protoc --python_out=. electrum/paymentrequest.proto
+
     substituteInPlace ./electrum/ecc_fast.py \
       --replace ${libsecp256k1_name} ${secp256k1}/lib/libsecp256k1${stdenv.hostPlatform.extensions.sharedLibrary}
   '' + (if enableQt then ''
@@ -112,35 +109,18 @@ python3.pkgs.buildPythonApplication {
     wrapQtApp $out/bin/electrum
   '';
 
-  checkInputs = with python3.pkgs; [ pytestCheckHook pyaes pycryptodomex ];
+  nativeCheckInputs = with python3.pkgs; [ pytestCheckHook pyaes pycryptodomex ];
 
   pytestFlagsArray = [ "electrum/tests" ];
-
-  disabledTests = [
-    "test_loop"  # test tries to bind 127.0.0.1 causing permission error
-  ];
 
   postCheck = ''
     $out/bin/electrum help >/dev/null
   '';
 
-  passthru.updateScript = import ./update.nix {
-    inherit lib;
-    inherit
-      writeScript
-      common-updater-scripts
-      bash
-      coreutils
-      curl
-      gnupg
-      gnugrep
-      gnused
-      nix
-    ;
-  };
+  passthru.updateScript = callPackage ./update.nix { };
 
   meta = with lib; {
-    description = "A lightweight Bitcoin wallet";
+    description = "Lightweight Bitcoin wallet";
     longDescription = ''
       An easy-to-use Bitcoin client featuring wallets generated from
       mnemonic seeds (in addition to other, more advanced, wallet options)

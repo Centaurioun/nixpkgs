@@ -11,7 +11,7 @@ let
     (assertOnlyFields [
       "Boot" "ProcessTwo" "Parameters" "Environment" "User" "WorkingDirectory"
       "PivotRoot" "Capability" "DropCapability" "NoNewPrivileges" "KillSignal"
-      "Personality" "MachineId" "PrivateUsers" "NotifyReady" "SystemCallFilter"
+      "Personality" "MachineID" "PrivateUsers" "NotifyReady" "SystemCallFilter"
       "LimitCPU" "LimitFSIZE" "LimitDATA" "LimitSTACK" "LimitCORE" "LimitRSS"
       "LimitNOFILE" "LimitAS" "LimitNPROC" "LimitMEMLOCK" "LimitLOCKS"
       "LimitSIGPENDING" "LimitMSGQUEUE" "LimitNICE" "LimitRTPRIO" "LimitRTTIME"
@@ -27,12 +27,12 @@ let
     (assertOnlyFields [
       "ReadOnly" "Volatile" "Bind" "BindReadOnly" "TemporaryFileSystem"
       "Overlay" "OverlayReadOnly" "PrivateUsersChown" "BindUser"
-      "Inaccessible" "PrivateUserOwnership"
+      "Inaccessible" "PrivateUsersOwnership"
     ])
     (assertValueOneOf "ReadOnly" boolValues)
     (assertValueOneOf "Volatile" (boolValues ++ [ "state" ]))
     (assertValueOneOf "PrivateUsersChown" boolValues)
-    (assertValueOneOf "PrivateUserOwnership" [ "off" "chown" "map" "auto" ])
+    (assertValueOneOf "PrivateUsersOwnership" [ "off" "chown" "map" "auto" ])
   ];
 
   checkNetwork = checkUnitConfig "Network" [
@@ -45,7 +45,9 @@ let
   ];
 
   instanceOptions = {
-    options = sharedOptions // {
+    options =
+    (getAttrs [ "enable" ] sharedOptions)
+    // {
       execConfig = mkOption {
         default = {};
         example = { Parameters = "/bin/sh"; };

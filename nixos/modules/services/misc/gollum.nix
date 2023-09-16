@@ -8,11 +8,7 @@ in
 
 {
   options.services.gollum = {
-    enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = lib.mdDoc "Enable the Gollum service.";
-    };
+    enable = mkEnableOption (lib.mdDoc "Gollum service");
 
     address = mkOption {
       type = types.str;
@@ -21,7 +17,7 @@ in
     };
 
     port = mkOption {
-      type = types.int;
+      type = types.port;
       default = 4567;
       description = lib.mdDoc "Port on which the web server will run.";
     };
@@ -87,18 +83,38 @@ in
       description = lib.mdDoc "Specifies the path of the repository directory. If it does not exist, Gollum will create it on startup.";
     };
 
+    package = mkOption {
+      type = types.package;
+      default = pkgs.gollum;
+      defaultText = literalExpression "pkgs.gollum";
+      description = lib.mdDoc ''
+        The package used in the service
+      '';
+    };
+
+    user = mkOption {
+      type = types.str;
+      default = "gollum";
+      description = lib.mdDoc "Specifies the owner of the wiki directory";
+    };
+
+    group = mkOption {
+      type = types.str;
+      default = "gollum";
+      description = lib.mdDoc "Specifies the owner group of the wiki directory";
+    };
   };
 
   config = mkIf cfg.enable {
 
-    users.users.gollum = {
-      group = config.users.users.gollum.name;
+    users.users.gollum = mkIf (cfg.user == "gollum") {
+      group = cfg.group;
       description = "Gollum user";
       createHome = false;
       isSystemUser = true;
     };
 
-    users.groups.gollum = { };
+    users.groups."${cfg.group}" = { };
 
     systemd.tmpfiles.rules = [
       "d '${cfg.stateDir}' - ${config.users.users.gollum.name} ${config.users.groups.gollum.name} - -"
@@ -116,11 +132,11 @@ in
       '';
 
       serviceConfig = {
-        User = config.users.users.gollum.name;
-        Group = config.users.groups.gollum.name;
+        User = cfg.user;
+        Group = cfg.group;
         WorkingDirectory = cfg.stateDir;
         ExecStart = ''
-          ${pkgs.gollum}/bin/gollum \
+          ${cfg.package}/bin/gollum \
             --port ${toString cfg.port} \
             --host ${cfg.address} \
             --config ${pkgs.writeText "gollum-config.rb" cfg.extraConfig} \
@@ -138,5 +154,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ erictapen bbenno ];
+  meta.maintainers = with lib.maintainers; [ erictapen bbenno joscha ];
 }

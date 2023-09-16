@@ -89,7 +89,7 @@ let
       PrivateNetwork = mkDefault (!needNetwork);
       ProcSubset = "pid";
       ProtectClock = true;
-      ProtectHome = mkDefault true;
+      ProtectHome = "tmpfs";
       ProtectHostname = true;
       ProtectKernelLogs = true;
       ProtectProc = "invisible";
@@ -143,7 +143,7 @@ in
 
 {
   options.services.public-inbox = {
-    enable = mkEnableOption "the public-inbox mail archiver";
+    enable = mkEnableOption (lib.mdDoc "the public-inbox mail archiver");
     package = mkOption {
       type = types.package;
       default = pkgs.public-inbox;
@@ -177,8 +177,7 @@ in
           description = lib.mdDoc "The email addresses of the public-inbox.";
         };
         options.url = mkOption {
-          type = with types; nullOr str;
-          default = null;
+          type = types.nonEmptyStr;
           example = "https://example.org/lists/example-discuss";
           description = lib.mdDoc "URL where this inbox can be accessed over HTTP.";
         };
@@ -218,10 +217,10 @@ in
       }));
     };
     imap = {
-      enable = mkEnableOption "the public-inbox IMAP server";
+      enable = mkEnableOption (lib.mdDoc "the public-inbox IMAP server");
     } // publicInboxDaemonOptions "imap" 993;
     http = {
-      enable = mkEnableOption "the public-inbox HTTP server";
+      enable = mkEnableOption (lib.mdDoc "the public-inbox HTTP server");
       mounts = mkOption {
         type = with types; listOf str;
         default = [ "/" ];
@@ -247,16 +246,16 @@ in
       };
     };
     mda = {
-      enable = mkEnableOption "the public-inbox Mail Delivery Agent";
+      enable = mkEnableOption (lib.mdDoc "the public-inbox Mail Delivery Agent");
       args = mkOption {
         type = with types; listOf str;
         default = [];
         description = lib.mdDoc "Command-line arguments to pass to {manpage}`public-inbox-mda(1)`.";
       };
     };
-    postfix.enable = mkEnableOption "the integration into Postfix";
+    postfix.enable = mkEnableOption (lib.mdDoc "the integration into Postfix");
     nntp = {
-      enable = mkEnableOption "the public-inbox NNTP server";
+      enable = mkEnableOption (lib.mdDoc "the public-inbox NNTP server");
     } // publicInboxDaemonOptions "nntp" 563;
     spamAssassinRules = mkOption {
       type = with types; nullOr path;
@@ -275,17 +274,32 @@ in
           default = {};
           description = lib.mdDoc "public inboxes";
           type = types.submodule {
-            freeformType = with types; /*inbox name*/attrsOf (/*inbox option name*/attrsOf /*inbox option value*/iniAtom);
+            # Support both global options like `services.public-inbox.settings.publicinbox.imapserver`
+            # and inbox specific options like `services.public-inbox.settings.publicinbox.foo.address`.
+            freeformType = with types; attrsOf (oneOf [ iniAtom (attrsOf iniAtom) ]);
+
             options.css = mkOption {
               type = with types; listOf str;
               default = [];
               description = lib.mdDoc "The local path name of a CSS file for the PSGI web interface.";
+            };
+            options.imapserver = mkOption {
+              type = with types; listOf str;
+              default = [];
+              example = [ "imap.public-inbox.org" ];
+              description = lib.mdDoc "IMAP URLs to this public-inbox instance";
             };
             options.nntpserver = mkOption {
               type = with types; listOf str;
               default = [];
               example = [ "nntp://news.public-inbox.org" "nntps://news.public-inbox.org" ];
               description = lib.mdDoc "NNTP URLs to this public-inbox instance";
+            };
+            options.pop3server = mkOption {
+              type = with types; listOf str;
+              default = [];
+              example = [ "pop.public-inbox.org" ];
+              description = lib.mdDoc "POP3 URLs to this public-inbox instance";
             };
             options.wwwlisting = mkOption {
               type = with types; enum [ "all" "404" "match=domain" ];
@@ -339,7 +353,7 @@ in
         };
       };
     };
-    openFirewall = mkEnableOption "opening the firewall when using a port option";
+    openFirewall = mkEnableOption (lib.mdDoc "opening the firewall when using a port option");
   };
   config = mkIf cfg.enable {
     assertions = [
@@ -446,6 +460,8 @@ in
           after = [ "public-inbox-init.service" "public-inbox-watch.service" ];
           requires = [ "public-inbox-init.service" ];
           serviceConfig = {
+            BindPathsReadOnly =
+              map (c: c.dir) (lib.attrValues cfg.settings.coderepo);
             ExecStart = escapeShellArgs (
               [ "${cfg.package}/bin/public-inbox-httpd" ] ++
               cfg.http.args ++
@@ -549,16 +565,7 @@ in
                 ${pkgs.git}/bin/git config core.sharedRepository 0640
               fi
             '') cfg.inboxes
-            ) + ''
-            shopt -s nullglob
-            for inbox in ${stateDir}/inboxes/*/; do
-              # This should be idempotent, but only do it for new
-              # inboxes anyway because it's only needed once, and could
-              # be slow for large pre-existing inboxes.
-              ls -1 "$inbox" | grep -q '^xap' ||
-              ${cfg.package}/bin/public-inbox-index "$inbox"
-            done
-          '';
+            );
           serviceConfig = {
             Type = "oneshot";
             RemainAfterExit = true;

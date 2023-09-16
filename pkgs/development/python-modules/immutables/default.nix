@@ -3,36 +3,38 @@
 , fetchFromGitHub
 , pytestCheckHook
 , pythonOlder
-, mypy
-, typing-extensions
 }:
 
 buildPythonPackage rec {
   pname = "immutables";
-  version = "0.18";
+  version = "0.20";
   format = "setuptools";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "MagicStack";
     repo = pname;
-    rev = "v${version}";
-    hash = "sha256-lXCoPTcpTOv9K0xCVjbrP3qlzP9tfk/e3Rk3oOmbS/Y=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-fEECtP6WQVzwSzBYX+CbhQtzkB/1WC3OYKXk2XY//xA=";
   };
 
-  propagatedBuildInputs = lib.optionals (pythonOlder "3.8") [
-    typing-extensions
-  ];
+  postPatch = ''
+    rm tests/conftest.py
+  '';
 
-  checkInputs = [
-    mypy
+  nativeCheckInputs = [
     pytestCheckHook
   ];
 
   disabledTests = [
     # Version mismatch
     "testMypyImmu"
+  ];
+
+  disabledTestPaths = [
+    # avoid dependency on mypy
+    "tests/test_mypy.py"
   ];
 
   pythonImportsCheck = [
@@ -42,6 +44,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "An immutable mapping type";
     homepage = "https://github.com/MagicStack/immutables";
+    changelog = "https://github.com/MagicStack/immutables/releases/tag/v${version}";
     license = with licenses; [ asl20 ];
     maintainers = with maintainers; [ catern ];
   };

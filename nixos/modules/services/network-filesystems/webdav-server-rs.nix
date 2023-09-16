@@ -14,7 +14,7 @@ in
 {
   options = {
     services.webdav-server-rs = {
-      enable = mkEnableOption "WebDAV server";
+      enable = mkEnableOption (lib.mdDoc "WebDAV server");
 
       user = mkOption {
         type = types.str;
@@ -26,6 +26,12 @@ in
         type = types.str;
         default = "webdav";
         description = lib.mdDoc "Group to run under when setuid is not enabled.";
+      };
+
+      debug = mkOption {
+        type = types.bool;
+        default = false;
+        description = lib.mdDoc "Enable debug mode.";
       };
 
       settings = mkOption {
@@ -111,7 +117,7 @@ in
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
-        ExecStart = "${pkgs.webdav-server-rs}/bin/webdav-server -c ${cfg.configFile}";
+        ExecStart = "${pkgs.webdav-server-rs}/bin/webdav-server ${lib.optionalString cfg.debug "--debug"} -c ${cfg.configFile}";
 
         CapabilityBoundingSet = [
           "CAP_SETUID"

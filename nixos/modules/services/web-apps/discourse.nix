@@ -19,14 +19,14 @@ let
   # We only want to create a database if we're actually going to connect to it.
   databaseActuallyCreateLocally = cfg.database.createLocally && cfg.database.host == null;
 
-  tlsEnabled = (cfg.enableACME
+  tlsEnabled = cfg.enableACME
                 || cfg.sslCertificate != null
-                || cfg.sslCertificateKey != null);
+                || cfg.sslCertificateKey != null;
 in
 {
   options = {
     services.discourse = {
-      enable = lib.mkEnableOption "Discourse, an open source discussion platform";
+      enable = lib.mkEnableOption (lib.mdDoc "Discourse, an open source discussion platform");
 
       package = lib.mkOption {
         type = lib.types.package;
@@ -42,11 +42,8 @@ in
 
       hostname = lib.mkOption {
         type = lib.types.str;
-        default = if config.networking.domain != null then
-                    config.networking.fqdn
-                  else
-                    config.networking.hostName;
-        defaultText = lib.literalExpression "config.networking.fqdn";
+        default = config.networking.fqdnOrHostName;
+        defaultText = lib.literalExpression "config.networking.fqdnOrHostName";
         example = "discourse.example.com";
         description = lib.mdDoc ''
           The hostname to serve Discourse on.
@@ -57,20 +54,20 @@ in
         type = with lib.types; nullOr path;
         default = null;
         example = "/run/keys/secret_key_base";
-        description = ''
+        description = lib.mdDoc ''
           The path to a file containing the
-          <literal>secret_key_base</literal> secret.
+          `secret_key_base` secret.
 
-          Discourse uses <literal>secret_key_base</literal> to encrypt
+          Discourse uses `secret_key_base` to encrypt
           the cookie store, which contains session data, and to digest
           user auth tokens.
 
           Needs to be a 64 byte long string of hexadecimal
           characters. You can generate one by running
 
-          <screen>
-          <prompt>$ </prompt>openssl rand -hex 64 >/path/to/secret_key_base_file
-          </screen>
+          ```
+          openssl rand -hex 64 >/path/to/secret_key_base_file
+          ```
 
           This should be a string, not a nix path, since nix paths are
           copied into the world-readable nix store.
@@ -618,6 +615,7 @@ in
       s3_endpoint = null;
       s3_http_continue_timeout = null;
       s3_install_cors_rule = null;
+      s3_asset_cdn_url = null;
 
       max_user_api_reqs_per_minute = 20;
       max_user_api_reqs_per_day = 2880;
@@ -650,6 +648,12 @@ in
       multisite_config_path = "config/multisite.yml";
       enable_long_polling = null;
       long_polling_interval = null;
+      preload_link_header = false;
+      redirect_avatar_requests = false;
+      pg_force_readonly_mode = false;
+      dns_query_timeout_secs = null;
+      regex_timeout_seconds = 2;
+      allow_impersonation = true;
     };
 
     services.redis.servers.discourse =
@@ -798,13 +802,13 @@ in
           "public"
           "sockets"
         ];
-        RuntimeDirectoryMode = 0750;
+        RuntimeDirectoryMode = "0750";
         StateDirectory = map (p: "discourse/" + p) [
           "uploads"
           "backups"
           "tmp"
         ];
-        StateDirectoryMode = 0750;
+        StateDirectoryMode = "0750";
         LogsDirectory = "discourse";
         TimeoutSec = "infinity";
         Restart = "on-failure";
@@ -823,10 +827,10 @@ in
 
     services.nginx = lib.mkIf cfg.nginx.enable {
       enable = true;
-      additionalModules = [ pkgs.nginxModules.brotli ];
 
       recommendedTlsSettings = true;
       recommendedOptimisation = true;
+      recommendedBrotliSettings = true;
       recommendedGzipSettings = true;
       recommendedProxySettings = true;
 
@@ -1014,6 +1018,7 @@ in
         notification_email = cfg.mail.notificationEmailAddress;
         contact_email = cfg.mail.contactEmailAddress;
       };
+      security.force_https = tlsEnabled;
       email = {
         manual_polling_enabled = cfg.mail.incoming.enable;
         reply_by_email_enabled = cfg.mail.incoming.enable;
@@ -1023,8 +1028,8 @@ in
 
     services.postfix = lib.mkIf cfg.mail.incoming.enable {
       enable = true;
-      sslCert = if cfg.sslCertificate != null then cfg.sslCertificate else "";
-      sslKey = if cfg.sslCertificateKey != null then cfg.sslCertificateKey else "";
+      sslCert = lib.optionalString (cfg.sslCertificate != null) cfg.sslCertificate;
+      sslKey = lib.optionalString (cfg.sslCertificateKey != null) cfg.sslCertificateKey;
 
       origin = cfg.hostname;
       relayDomains = [ cfg.hostname ];
@@ -1083,6 +1088,6 @@ in
     ];
   };
 
-  meta.doc = ./discourse.xml;
+  meta.doc = ./discourse.md;
   meta.maintainers = [ lib.maintainers.talyz ];
 }

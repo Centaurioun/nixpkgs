@@ -9,7 +9,7 @@ in
         enable = lib.mkOption {
           default = false;
           internal = true;
-          description = ''
+          description = lib.mdDoc ''
             Whether the OpenStack instance uses a ZFS root.
           '';
         };
@@ -29,13 +29,13 @@ in
             options = {
               mount = lib.mkOption {
                 description = lib.mdDoc "Where to mount this dataset.";
-                type = types.nullOr types.string;
+                type = types.nullOr types.str;
                 default = null;
               };
 
               properties = lib.mkOption {
                 description = lib.mdDoc "Properties to set on this dataset.";
-                type = types.attrsOf types.string;
+                type = types.attrsOf types.str;
                 default = { };
               };
             };
@@ -47,7 +47,7 @@ in
         default = pkgs.stdenv.hostPlatform.isAarch64;
         defaultText = literalExpression "pkgs.stdenv.hostPlatform.isAarch64";
         internal = true;
-        description = ''
+        description = lib.mdDoc ''
           Whether the instance is using EFI.
         '';
       };

@@ -2,6 +2,7 @@
 , stdenv
 , buildPythonPackage
 , fetchFromGitHub
+, fetchpatch
 , fetchurl
 , pythonOlder
 , substituteAll
@@ -16,6 +17,7 @@
 
 # psycopg-c
 , cython_3
+, tomli
 
 # docs
 , furo
@@ -24,32 +26,34 @@
 , sphinx-autodoc-typehints
 
 # tests
+, anyio
 , pproxy
-, pytest-asyncio
 , pytest-randomly
 , pytestCheckHook
+, postgresqlTestHook
 }:
 
 let
   pname = "psycopg";
-  version = "3.0.16";
+  version = "3.1.10";
 
   src = fetchFromGitHub {
     owner = "psycopg";
     repo = pname;
-    rev = version;
-    hash = "sha256-jKhpmCcDi7FyMSpn51eSukFvmu3yacNovmRYG9jnu3g=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-GdgzHmzPCK3wq/8sCc1NaPEVwl4Q5OBZMp86RXkhE0M=";
   };
 
   patches = [
     (substituteAll {
-      src = ./libpq.patch;
+      src = ./ctypes.patch;
       libpq = "${postgresql.lib}/lib/libpq${stdenv.hostPlatform.extensions.sharedLibrary}";
+      libc = "${stdenv.cc.libc}/lib/libc.so.6";
     })
   ];
 
   baseMeta = {
-    changelog = "https://github.com/psycopg/psycopg/blob/master/docs/news.rst";
+    changelog = "https://github.com/psycopg/psycopg/blob/${version}/docs/news.rst#current-release";
     homepage = "https://github.com/psycopg/psycopg";
     license = lib.licenses.lgpl3Plus;
     maintainers = with lib.maintainers; [ hexa ];
@@ -69,9 +73,10 @@ let
     '';
 
     nativeBuildInputs = [
-      setuptools
       cython_3
       postgresql
+      setuptools
+      tomli
     ];
 
     # tested in psycopg
@@ -95,7 +100,7 @@ let
       cd psycopg_pool
     '';
 
-    propagatedBuildInputs = lib.optionals (pythonOlder "3.10") [
+    propagatedBuildInputs = [
       typing-extensions
     ];
 
@@ -145,7 +150,6 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [
     psycopg-c
-  ] ++ lib.optionals (pythonOlder "3.11") [
     typing-extensions
   ] ++ lib.optionals (pythonOlder "3.9") [
     backports-zoneinfo
@@ -162,28 +166,32 @@ buildPythonPackage rec {
     pool = [ psycopg-pool ];
   };
 
-  preCheck = ''
-    cd ..
-  '';
-
-  checkInputs = [
+  nativeCheckInputs = [
+    anyio
     pproxy
-    pytest-asyncio
     pytest-randomly
     pytestCheckHook
     postgresql
   ]
+  ++ lib.optional (stdenv.isLinux) postgresqlTestHook
   ++ passthru.optional-dependencies.c
   ++ passthru.optional-dependencies.pool;
+
+  env = {
+    postgresqlEnableTCP = 1;
+    PGUSER = "psycopg";
+  };
+
+  preCheck = ''
+    cd ..
+  '' + lib.optionalString (stdenv.isLinux) ''
+    export PSYCOPG_TEST_DSN="host=127.0.0.1 user=$PGUSER"
+  '';
 
   disabledTests = [
     # don't depend on mypy for tests
     "test_version"
     "test_package_version"
-  ] ++ lib.optionals (stdenv.isDarwin) [
-    # racy test
-    "test_sched"
-    "test_sched_error"
   ];
 
   disabledTestPaths = [
@@ -192,10 +200,12 @@ buildPythonPackage rec {
     "tests/test_dns_srv.py"
     # Mypy typing test
     "tests/test_typing.py"
+    "tests/crdb/test_typing.py"
   ];
 
   pytestFlagsArray = [
-    "-o cache_dir=$TMPDIR"
+    "-o" "cache_dir=$TMPDIR"
+    "-m" "'not timing'"
   ];
 
   postCheck = ''

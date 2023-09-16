@@ -9,7 +9,7 @@ let
 in {
   options = {
     services.rmfakecloud = {
-      enable = mkEnableOption "rmfakecloud remarkable self-hosted cloud";
+      enable = mkEnableOption (lib.mdDoc "rmfakecloud remarkable self-hosted cloud");
 
       package = mkOption {
         type = types.package;
@@ -138,7 +138,7 @@ in {
         SystemCallArchitectures = "native";
         WorkingDirectory = serviceDataDir;
         StateDirectory = baseNameOf serviceDataDir;
-        UMask = 0027;
+        UMask = "0027";
       };
     };
   };

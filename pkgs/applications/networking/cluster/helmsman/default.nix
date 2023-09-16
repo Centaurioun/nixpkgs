@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "helmsman";
-  version = "3.13.1";
+  version = "3.17.0";
 
   src = fetchFromGitHub {
     owner = "Praqma";
     repo = "helmsman";
     rev = "v${version}";
-    sha256 = "sha256-AfJf+o73iR0aHNFfB7f0S+cc5VeEOAjD0Ou44WHTTAg=";
+    sha256 = "sha256-mXc3CVKh4pFAZVppvk5TTg6s6dOA2Gv+ROLNV37DAl4=";
   };
 
-  vendorSha256 = "sha256-Ijy9UxT746Bi6x+aXxKNRxzAo5yRTV/6nbVjk9i4ffk=";
+  vendorHash = "sha256-zn8q3HpyQWNsksYbqJcgnjOxaBVUr3dIYHk+FAalNxA=";
 
   doCheck = false;
 
@@ -20,6 +20,5 @@ buildGoModule rec {
     homepage = "https://github.com/Praqma/helmsman";
     license = licenses.mit;
     maintainers = with maintainers; [ lynty ];
-    platforms = platforms.unix;
   };
 }

@@ -10,7 +10,7 @@ let
 in {
   options = {
     services.unit = {
-      enable = mkEnableOption "Unit App Server";
+      enable = mkEnableOption (lib.mdDoc "Unit App Server");
       package = mkOption {
         type = types.package;
         default = pkgs.unit;
@@ -104,7 +104,7 @@ in {
         PIDFile = "/run/unit/unit.pid";
         ExecStart = ''
           ${cfg.package}/bin/unitd --control 'unix:/run/unit/control.unit.sock' --pid '/run/unit/unit.pid' \
-                                   --log '${cfg.logDir}/unit.log' --state '${cfg.stateDir}' --tmp '/tmp' \
+                                   --log '${cfg.logDir}/unit.log' --statedir '${cfg.stateDir}' --tmpdir '/tmp' \
                                    --user ${cfg.user} --group ${cfg.group}
         '';
         ExecStop = ''

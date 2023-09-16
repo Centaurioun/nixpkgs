@@ -157,17 +157,17 @@ in
               options = {
                 command = mkOption {
                   type = with types; str;
-                  description = ''
+                  description = lib.mdDoc ''
                     A command being either just a path to a binary to allow any arguments,
-                    the full command with arguments pre-set or with <literal>""</literal> used as the argument,
+                    the full command with arguments pre-set or with `""` used as the argument,
                     not allowing arguments to the command at all.
                   '';
                 };
 
                 options = mkOption {
                   type = with types; listOf (enum [ "NOPASSWD" "PASSWD" "NOEXEC" "EXEC" "SETENV" "NOSETENV" "LOG_INPUT" "NOLOG_INPUT" "LOG_OUTPUT" "NOLOG_OUTPUT" ]);
-                  description = ''
-                    Options for running the command. Refer to the <a href="https://www.sudo.ws/man/1.7.10/sudoers.man.html">sudo manual</a>.
+                  description = lib.mdDoc ''
+                    Options for running the command. Refer to the [sudo manual](https://www.sudo.ws/man/1.7.10/sudoers.man.html).
                   '';
                   default = [];
                 };
@@ -192,6 +192,10 @@ in
   ###### implementation
 
   config = mkIf cfg.enable {
+    assertions = [
+      { assertion = cfg.package.pname != "sudo-rs";
+        message = "The NixOS `sudo` module does not work with `sudo-rs` yet."; }
+    ];
 
     # We `mkOrder 600` so that the default rule shows up first, but there is
     # still enough room for a user to `mkBefore` it.
@@ -216,10 +220,10 @@ in
         ${concatStringsSep "\n" (
           lists.flatten (
             map (
-              rule: if (length rule.commands != 0) then [
+              rule: optionals (length rule.commands != 0) [
                 (map (user: "${toUserString user}	${rule.host}=(${rule.runAs})	${toCommandsString rule.commands}") rule.users)
                 (map (group: "${toGroupString group}	${rule.host}=(${rule.runAs})	${toCommandsString rule.commands}") rule.groups)
-              ] else []
+              ]
             ) cfg.extraRules
           )
         )}

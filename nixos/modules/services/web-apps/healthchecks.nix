@@ -1,33 +1,33 @@
-{ config, lib, pkgs, buildEnv, ... }:
+{ config, lib, options, pkgs, buildEnv, ... }:
 
 with lib;
 
 let
   defaultUser = "healthchecks";
   cfg = config.services.healthchecks;
+  opt = options.services.healthchecks;
   pkg = cfg.package;
   boolToPython = b: if b then "True" else "False";
   environment = {
     PYTHONPATH = pkg.pythonPath;
     STATIC_ROOT = cfg.dataDir + "/static";
-    DB_NAME = "${cfg.dataDir}/healthchecks.sqlite";
   } // cfg.settings;
 
   environmentFile = pkgs.writeText "healthchecks-environment" (lib.generators.toKeyValue { } environment);
 
-  healthchecksManageScript = with pkgs; (writeShellScriptBin "healthchecks-manage" ''
+  healthchecksManageScript = pkgs.writeShellScriptBin "healthchecks-manage" ''
+    sudo=exec
     if [[ "$USER" != "${cfg.user}" ]]; then
-        echo "please run as user 'healtchecks'." >/dev/stderr
-        exit 1
+      sudo='exec /run/wrappers/bin/sudo -u ${cfg.user} --preserve-env --preserve-env=PYTHONPATH'
     fi
-    export $(cat ${environmentFile} | xargs);
-    exec ${pkg}/opt/healthchecks/manage.py "$@"
-  '');
+    export $(cat ${environmentFile} | xargs)
+    $sudo ${pkg}/opt/healthchecks/manage.py "$@"
+  '';
 in
 {
   options.services.healthchecks = {
-    enable = mkEnableOption "healthchecks" // {
-      description = ''
+    enable = mkEnableOption (lib.mdDoc "healthchecks") // {
+      description = lib.mdDoc ''
         Enable healthchecks.
         It is expected to be run behind a HTTP reverse proxy.
       '';
@@ -43,28 +43,28 @@ in
     user = mkOption {
       default = defaultUser;
       type = types.str;
-      description = ''
+      description = lib.mdDoc ''
         User account under which healthchecks runs.
 
-        <note><para>
+        ::: {.note}
         If left as the default value this user will automatically be created
         on system activation, otherwise you are responsible for
         ensuring the user exists before the healthchecks service starts.
-        </para></note>
+        :::
       '';
     };
 
     group = mkOption {
       default = defaultUser;
       type = types.str;
-      description = ''
+      description = lib.mdDoc ''
         Group account under which healthchecks runs.
 
-        <note><para>
+        ::: {.note}
         If left as the default value this group will automatically be created
         on system activation, otherwise you are responsible for
         ensuring the group exists before the healthchecks service starts.
-        </para></note>
+        :::
       '';
     };
 
@@ -83,32 +83,39 @@ in
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/healthchecks";
-      description = ''
+      description = lib.mdDoc ''
         The directory used to store all data for healthchecks.
 
-        <note><para>
+        ::: {.note}
         If left as the default value this directory will automatically be created before
         the healthchecks server starts, otherwise you are responsible for ensuring the
         directory exists with appropriate ownership and permissions.
-        </para></note>
+        :::
       '';
     };
 
     settings = lib.mkOption {
-      description = ''
-        Environment variables which are read by healthchecks <literal>(local)_settings.py</literal>.
+      description = lib.mdDoc ''
+        Environment variables which are read by healthchecks `(local)_settings.py`.
 
-        Settings which are explictly covered in options bewlow, are type-checked and/or transformed
+        Settings which are explicitly covered in options below, are type-checked and/or transformed
         before added to the environment, everything else is passed as a string.
 
-        See <link xlink:href="">https://healthchecks.io/docs/self_hosted_configuration/</link>
+        See <https://healthchecks.io/docs/self_hosted_configuration/>
         for a full documentation of settings.
 
-        We add two variables to this list inside the packages <literal>local_settings.py.</literal>
-        - STATIC_ROOT to set a state directory for dynamically generated static files.
-        - SECRET_KEY_FILE to read SECRET_KEY from a file at runtime and keep it out of /nix/store.
+        We add additional variables to this list inside the packages `local_settings.py.`
+        - `STATIC_ROOT` to set a state directory for dynamically generated static files.
+        - `SECRET_KEY_FILE` to read `SECRET_KEY` from a file at runtime and keep it out of
+          /nix/store.
+        - `_FILE` variants for several values that hold sensitive information in
+          [Healthchecks configuration](https://healthchecks.io/docs/self_hosted_configuration/) so
+          that they also can be read from a file and kept out of /nix/store. To see which values
+          have support for a `_FILE` variant, run:
+          - `nix-instantiate --eval --expr '(import <nixpkgs> {}).healthchecks.secrets'`
+          - or `nix eval 'nixpkgs#healthchecks.secrets'` if the flake support has been enabled.
       '';
-      type = types.submodule {
+      type = types.submodule (settings: {
         freeformType = types.attrsOf types.str;
         options = {
           ALLOWED_HOSTS = lib.mkOption {
@@ -143,8 +150,28 @@ in
             '';
             apply = boolToPython;
           };
+
+          DB = mkOption {
+            type = types.enum [ "sqlite" "postgres" "mysql" ];
+            default = "sqlite";
+            description = lib.mdDoc "Database engine to use.";
+          };
+
+          DB_NAME = mkOption {
+            type = types.str;
+            default =
+              if settings.config.DB == "sqlite"
+              then "${cfg.dataDir}/healthchecks.sqlite"
+              else "hc";
+            defaultText = lib.literalExpression ''
+              if config.${settings.options.DB} == "sqlite"
+              then "''${config.${opt.dataDir}}/healthchecks.sqlite"
+              else "hc"
+            '';
+            description = lib.mdDoc "Database name.";
+          };
         };
-      };
+      });
     };
   };
 
@@ -163,12 +190,12 @@ in
           WorkingDirectory = cfg.dataDir;
           User = cfg.user;
           Group = cfg.group;
-          EnvironmentFile = environmentFile;
+          EnvironmentFile = [ environmentFile ];
           StateDirectory = mkIf (cfg.dataDir == "/var/lib/healthchecks") "healthchecks";
           StateDirectoryMode = mkIf (cfg.dataDir == "/var/lib/healthchecks") "0750";
         };
       in
-        {
+      {
         healthchecks-migration = {
           description = "Healthchecks migrations";
           wantedBy = [ "healthchecks.target" ];

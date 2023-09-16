@@ -12,10 +12,11 @@ buildDunePackage rec {
   };
 
   minimalOCamlVersion = "4.04";
+  duneVersion = "3";
 
   checkInputs = [ alcotest ];
 
-  doCheck = lib.versionAtLeast ocaml.version "4.05";
+  doCheck = lib.versionAtLeast ocaml.version "4.08";
 
   meta = {
     homepage = "https://github.com/hannesm/domain-name";

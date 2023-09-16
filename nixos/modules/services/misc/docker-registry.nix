@@ -15,9 +15,7 @@ let
     storage = {
       cache.blobdescriptor = blobCache;
       delete.enabled = cfg.enableDelete;
-    } // (if cfg.storagePath != null
-          then { filesystem.rootdirectory = cfg.storagePath; }
-          else {});
+    } // (optionalAttrs (cfg.storagePath != null) { filesystem.rootdirectory = cfg.storagePath; });
     http = {
       addr = "${cfg.listenAddress}:${builtins.toString cfg.port}";
       headers.X-Content-Type-Options = ["nosniff"];
@@ -47,7 +45,15 @@ let
 
 in {
   options.services.dockerRegistry = {
-    enable = mkEnableOption "Docker Registry";
+    enable = mkEnableOption (lib.mdDoc "Docker Registry");
+
+    package = mkOption {
+      type = types.package;
+      description = mdDoc "Which Docker registry package to use.";
+      default = pkgs.docker-distribution;
+      defaultText = literalExpression "pkgs.docker-distribution";
+      example = literalExpression "pkgs.gitlab-container-registry";
+    };
 
     listenAddress = mkOption {
       description = lib.mdDoc "Docker registry host or ip to bind to.";
@@ -76,7 +82,7 @@ in {
       description = lib.mdDoc "Enable delete for manifests and blobs.";
     };
 
-    enableRedisCache = mkEnableOption "redis as blob cache";
+    enableRedisCache = mkEnableOption (lib.mdDoc "redis as blob cache");
 
     redisUrl = mkOption {
       type = types.str;
@@ -98,7 +104,7 @@ in {
       type = types.attrs;
     };
 
-    enableGarbageCollect = mkEnableOption "garbage collect";
+    enableGarbageCollect = mkEnableOption (lib.mdDoc "garbage collect");
 
     garbageCollectDates = mkOption {
       default = "daily";
@@ -117,7 +123,7 @@ in {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       script = ''
-        ${pkgs.docker-distribution}/bin/registry serve ${configFile}
+        ${cfg.package}/bin/registry serve ${configFile}
       '';
 
       serviceConfig = {
@@ -136,7 +142,7 @@ in {
       serviceConfig.Type = "oneshot";
 
       script = ''
-        ${pkgs.docker-distribution}/bin/registry garbage-collect ${configFile}
+        ${cfg.package}/bin/registry garbage-collect ${configFile}
         /run/current-system/systemd/bin/systemctl restart docker-registry.service
       '';
 
@@ -144,12 +150,10 @@ in {
     };
 
     users.users.docker-registry =
-      (if cfg.storagePath != null
-      then {
+      (optionalAttrs (cfg.storagePath != null) {
         createHome = true;
         home = cfg.storagePath;
-      }
-      else {}) // {
+      }) // {
         group = "docker-registry";
         isSystemUser = true;
       };

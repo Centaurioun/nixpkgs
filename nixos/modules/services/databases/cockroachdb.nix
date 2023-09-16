@@ -49,7 +49,7 @@ in
 {
   options = {
     services.cockroachdb = {
-      enable = mkEnableOption "CockroachDB Server";
+      enable = mkEnableOption (lib.mdDoc "CockroachDB Server");
 
       listen = addressOption "intra-cluster communication" 26257;
 
@@ -58,7 +58,7 @@ in
       locality = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = ''
+        description = lib.mdDoc ''
           An ordered, comma-separated list of key-value pairs that describe the
           topography of the machine. Topography might include country,
           datacenter or rack designations. Data is automatically replicated to
@@ -68,12 +68,12 @@ in
           like datacenter.  The tiers and order must be the same on all nodes.
           Including more tiers is better than including fewer. For example:
 
-          <literal>
+          ```
               country=us,region=us-west,datacenter=us-west-1b,rack=12
               country=ca,region=ca-east,datacenter=ca-east-2,rack=4
 
               planet=earth,province=manitoba,colo=secondary,power=3
-          </literal>
+          ```
         '';
       };
 
@@ -164,7 +164,7 @@ in
         example = [ "--advertise-addr" "[fe80::f6f2:::]" ];
         description = lib.mdDoc ''
           Extra CLI arguments passed to {command}`cockroach start`.
-          For the full list of supported argumemnts, check <https://www.cockroachlabs.com/docs/stable/cockroach-start.html#flags>
+          For the full list of supported arguments, check <https://www.cockroachlabs.com/docs/stable/cockroach-start.html#flags>
         '';
       };
     };

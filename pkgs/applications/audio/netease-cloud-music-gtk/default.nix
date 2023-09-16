@@ -2,6 +2,7 @@
 , stdenv
 , fetchFromGitHub
 , rustPlatform
+, cargo
 , meson
 , ninja
 , pkg-config
@@ -10,6 +11,7 @@
 , appstream-glib
 , desktop-file-utils
 , libxml2
+, rustc
 , wrapGAppsHook4
 , openssl
 , dbus
@@ -21,21 +23,25 @@
 
 stdenv.mkDerivation rec {
   pname = "netease-cloud-music-gtk";
-  version = "2.0.1";
+  version = "2.2.0";
 
   src = fetchFromGitHub {
     owner = "gmg137";
     repo = pname;
     rev = version;
-    hash = "sha256-dlJZvmfw9+cavAysxVzCekgPdygg5zbU3ZR5BOjPk08=";
+    hash = "sha256-9qUzRmm3WQEVjzhzHMT1vNw3r3ymWGlBWXnnPsYGSnk=";
   };
 
-  patches = [ ./cargo-lock.patch ];
-
-  cargoDeps = rustPlatform.fetchCargoTarball {
-    inherit src patches;
-    hash = "sha256-mJyjWEBsLhHwJCeZyRdby/K/jse0F9UBwfQxkNtZito=";
+  cargoDeps = rustPlatform.importCargoLock {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "netease-cloud-music-api-1.2.0" = "sha256-MR1yVPrNzhZC65mQen88t7NbLfRcoWvT6DMSLGCMeTY=";
+    };
   };
+
+  postPatch = ''
+    cp ${./Cargo.lock} Cargo.lock
+  '';
 
   nativeBuildInputs = [
     meson
@@ -47,11 +53,10 @@ stdenv.mkDerivation rec {
     desktop-file-utils # update-desktop-database
     libxml2 # xmllint
     wrapGAppsHook4
-  ] ++ (with rustPlatform; [
-    cargoSetupHook
-    rust.cargo
-    rust.rustc
-  ]);
+    rustPlatform.cargoSetupHook
+    cargo
+    rustc
+  ];
 
   buildInputs = [
     openssl
@@ -74,5 +79,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ diffumist ];
     mainProgram = "netease-cloud-music-gtk4";
+    platforms = platforms.linux;
   };
 }

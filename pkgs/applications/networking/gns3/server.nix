@@ -1,70 +1,45 @@
-{ stable
-, branch
+{ channel
 , version
-, sha256Hash
-, mkOverride
-, commonOverrides
+, hash
 }:
 
 { lib
 , python3
 , fetchFromGitHub
-, packageOverrides ? self: super: {}
+, pkgsStatic
 }:
 
-let
-  defaultOverrides = commonOverrides ++ [
-    (self: super: {
-      jsonschema = super.jsonschema.overridePythonAttrs (oldAttrs: rec {
-        version = "3.2.0";
-
-        src = super.fetchPypi {
-          inherit (oldAttrs) pname;
-          inherit version;
-          sha256 = "sha256-yKhbKNN3zHc35G4tnytPRO48Dh3qxr9G3e/HGH0weXo=";
-        };
-
-        SETUPTOOLS_SCM_PRETEND_VERSION = version;
-
-        doCheck = false;
-      });
-
-    })
-  ];
-
-  python = python3.override {
-    packageOverrides = lib.foldr lib.composeExtensions (self: super: { }) ([ packageOverrides ] ++ defaultOverrides);
-  };
-in python.pkgs.buildPythonApplication {
+python3.pkgs.buildPythonApplication {
   pname = "gns3-server";
   inherit version;
 
   src = fetchFromGitHub {
+    inherit hash;
     owner = "GNS3";
     repo = "gns3-server";
-    rev = "v${version}";
-    sha256 = sha256Hash;
+    rev = "refs/tags/v${version}";
   };
 
-  postPatch = ''
-    substituteInPlace requirements.txt \
-      --replace "aiohttp==" "aiohttp>=" \
-      --replace "aiofiles==" "aiofiles>=" \
-      --replace "Jinja2==" "Jinja2>=" \
-      --replace "sentry-sdk==" "sentry-sdk>=" \
-      --replace "async-timeout==" "async-timeout>=" \
-      --replace "psutil==" "psutil>=" \
-      --replace "distro==" "distro>=" \
-      --replace "py-cpuinfo==" "py-cpuinfo>=" \
-      --replace "setuptools==" "setuptools>="
+  # GNS3 2.3.26 requires a static BusyBox for the Docker integration
+  prePatch = ''
+    cp ${pkgsStatic.busybox}/bin/busybox gns3server/compute/docker/resources/bin/busybox
   '';
 
-  propagatedBuildInputs = with python.pkgs; [
+  nativeBuildInputs = with python3.pkgs; [
+    pythonRelaxDepsHook
+  ];
+
+  pythonRelaxDeps = [
+    "jsonschema"
+  ];
+
+  propagatedBuildInputs = with python3.pkgs; [
     aiofiles
     aiohttp
     aiohttp-cors
-    async_generator
+    async-generator
     distro
+    importlib-resources
     jinja2
     jsonschema
     multidict
@@ -73,6 +48,7 @@ in python.pkgs.buildPythonApplication {
     py-cpuinfo
     sentry-sdk
     setuptools
+    truststore
     yarl
     zipstream
   ];
@@ -85,7 +61,7 @@ in python.pkgs.buildPythonApplication {
   '';
 
   meta = with lib; {
-    description = "Graphical Network Simulator 3 server (${branch} release)";
+    description = "Graphical Network Simulator 3 server (${channel} release)";
     longDescription = ''
       The GNS3 server manages emulators such as Dynamips, VirtualBox or
       Qemu/KVM. Clients like the GNS3 GUI control the server using a HTTP REST
@@ -95,6 +71,6 @@ in python.pkgs.buildPythonApplication {
     changelog = "https://github.com/GNS3/gns3-server/releases/tag/v${version}";
     license = licenses.gpl3Plus;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [ anthonyroussel ];
   };
 }

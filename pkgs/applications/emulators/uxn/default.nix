@@ -2,53 +2,72 @@
 , stdenv
 , fetchFromSourcehut
 , SDL2
+, unstableGitUpdater
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "uxn";
-  version = "0.pre+unstable=2021-08-30";
+  version = "unstable-2023-08-30";
 
   src = fetchFromSourcehut {
     owner = "~rabbits";
-    repo = pname;
-    rev = "a2e40d9d10c11ef48f4f93d0dc86f5085b4263ce";
-    hash = "sha256-/hxDYi814nQydm2iQk4NID4vpJ3BcBcM6NdL0iuZk5M=";
+    repo = "uxn";
+    rev = "cfd29ac5119e5b270d5f3e3e9e29d020dadef8d3";
+    hash = "sha256-0fE9M+IEKTBG0WLKEbXG1kAJv19TrQWTFMjedOyX8N0=";
   };
+
+  outputs = [ "out" "projects" ];
+
+  nativeBuildInputs = [
+    SDL2
+  ];
 
   buildInputs = [
     SDL2
   ];
 
-  dontConfigure = true;
+  strictDeps = true;
 
-  # It is easier to emulate build.sh script
+  postPatch = ''
+    patchShebangs build.sh
+    substituteInPlace build.sh \
+      --replace "-L/usr/local/lib " "" \
+      --replace "\$(brew --prefix)/lib/libSDL2.a " ""
+  '';
+
   buildPhase = ''
     runHook preBuild
 
-    cc -std=c89 -Wall -Wno-unknown-pragmas src/uxnasm.c -o uxnasm
-    cc -std=c89 -Wall -Wno-unknown-pragmas src/uxn.c src/uxncli.c -o uxncli
-    cc -std=c89 -Wall -Wno-unknown-pragmas src/uxn.c src/devices/ppu.c \
-       src/devices/apu.c src/uxnemu.c $(sdl2-config --cflags --libs) -o uxnemu
+    ./build.sh --no-run
 
     runHook postBuild
   '';
 
+  # ./build.sh --install is meant to install in $HOME, therefore not useful for
+  # package maintainers
   installPhase = ''
     runHook preInstall
 
-    install -d $out/bin/ $out/share/${pname}/
-
-    cp uxnasm uxncli uxnemu $out/bin/
-    cp -r projects $out/share/${pname}/
+    install -d $out/bin/
+    cp bin/uxnasm bin/uxncli bin/uxnemu $out/bin/
+    install -d $projects/share/uxn/
+    cp -r projects $projects/share/uxn/
 
     runHook postInstall
   '';
 
-  meta = with lib; {
+  passthru.updateScript = unstableGitUpdater { };
+
+  meta = {
     homepage = "https://wiki.xxiivv.com/site/uxn.html";
     description = "An assembler and emulator for the Uxn stack machine";
-    license = with licenses; [ mit ];
-    maintainers = with maintainers; [ AndersonTorres ];
-    platforms = with platforms; unix;
+    license = lib.licenses.mit;
+    maintainers = with lib.maintainers; [ AndersonTorres ];
+    mainProgram = "uxnemu";
+    inherit (SDL2.meta) platforms;
+    # ofborg complains about an error trying to link inexistent SDL2 library
+    # For full logs, run:
+    # 'nix log /nix/store/bmyhh0lpifl9swvkpflqldv43vcrgci1-uxn-unstable-2023-08-10.drv'.
+    broken = stdenv.isDarwin;
   };
-}
+})

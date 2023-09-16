@@ -1,6 +1,9 @@
 { lib
 , buildPythonPackage
 , fetchFromGitHub
+, setuptools
+, setuptools-scm
+, wheel
 , pytestCheckHook
 , pytest
 , pythonOlder
@@ -20,11 +23,19 @@ buildPythonPackage rec {
     hash = "sha256-5gB+hnJR2+NQd/n7RGrX1bzfKt8Np7IbWw61SZgNVJY=";
   };
 
+  env.SETUPTOOLS_SCM_PRETEND_VERSION = version;
+
+  nativeBuildInputs = [
+    setuptools
+    setuptools-scm
+    wheel
+  ];
+
   buildInputs = [
     pytest
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
   ];
 

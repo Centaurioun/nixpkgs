@@ -8,11 +8,13 @@ in
 {
   options = {
     services.duplicati = {
-      enable = mkEnableOption "Duplicati";
+      enable = mkEnableOption (lib.mdDoc "Duplicati");
+
+      package = mkPackageOptionMD pkgs "duplicati" { };
 
       port = mkOption {
         default = 8200;
-        type = types.int;
+        type = types.port;
         description = lib.mdDoc ''
           Port serving the web interface
         '';
@@ -21,14 +23,14 @@ in
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/duplicati";
-        description = ''
+        description = lib.mdDoc ''
           The directory where Duplicati stores its data files.
 
-          <note><para>
-            If left as the default value this directory will automatically be created
-            before the Duplicati server starts, otherwise you are responsible for ensuring
-            the directory exists with appropriate ownership and permissions.
-          </para></note>
+          ::: {.note}
+          If left as the default value this directory will automatically be created
+          before the Duplicati server starts, otherwise you are responsible for ensuring
+          the directory exists with appropriate ownership and permissions.
+          :::
         '';
       };
 
@@ -53,7 +55,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [ pkgs.duplicati ];
+    environment.systemPackages = [ cfg.package ];
 
     systemd.services.duplicati = {
       description = "Duplicati backup";
@@ -63,7 +65,7 @@ in
         {
           User = cfg.user;
           Group = "duplicati";
-          ExecStart = "${pkgs.duplicati}/bin/duplicati-server --webservice-interface=${cfg.interface} --webservice-port=${toString cfg.port} --server-datafolder=${cfg.dataDir}";
+          ExecStart = "${cfg.package}/bin/duplicati-server --webservice-interface=${cfg.interface} --webservice-port=${toString cfg.port} --server-datafolder=${cfg.dataDir}";
           Restart = "on-failure";
         }
         (mkIf (cfg.dataDir == "/var/lib/duplicati") {
@@ -83,4 +85,3 @@ in
 
   };
 }
-

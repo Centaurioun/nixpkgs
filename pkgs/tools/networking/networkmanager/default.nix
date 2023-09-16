@@ -2,9 +2,8 @@
 , stdenv
 , fetchurl
 , substituteAll
-, intltool
+, gettext
 , pkg-config
-, fetchpatch
 , dbus
 , gnome
 , systemd
@@ -24,6 +23,7 @@
 , libselinux
 , audit
 , gobject-introspection
+, perl
 , modemmanager
 , openresolv
 , libndp
@@ -57,11 +57,11 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "networkmanager";
-  version = "1.38.4";
+  version = "1.42.8";
 
   src = fetchurl {
     url = "mirror://gnome/sources/NetworkManager/${lib.versions.majorMinor version}/NetworkManager-${version}.tar.xz";
-    sha256 = "sha256-hB9k1Bd2qt2SsVH0flD2K+igYRqQVv5r+BiBAk5qlsU=";
+    sha256 = "sha256-AzfnWD0uxa3iui6MYl0vCe7M2h0ig27imqcpJdOZw1M=";
   };
 
   outputs = [ "out" "dev" "devdoc" "man" "doc" ];
@@ -112,6 +112,7 @@ stdenv.mkDerivation rec {
     "-Dfirewalld_zone=false"
     "-Dtests=no"
     "-Dcrypto=gnutls"
+    "-Dmobile_broadband_provider_info_database=${mobile-broadband-provider-info}/share/mobile-broadband-provider-info/serviceproviders.xml"
   ];
 
   patches = [
@@ -127,7 +128,6 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    gobject-introspection
     systemd
     libselinux
     audit
@@ -153,10 +153,11 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     meson
     ninja
-    intltool
+    gettext
     pkg-config
     vala
     gobject-introspection
+    perl
     elfutils # used to find jansson soname
     # Docs
     gtk-doc
@@ -208,7 +209,7 @@ stdenv.mkDerivation rec {
     description = "Network configuration and management tool";
     license = licenses.gpl2Plus;
     changelog = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/raw/${version}/NEWS";
-    maintainers = teams.freedesktop.members ++ (with maintainers; [ domenkozar obadz maxeaubrey ]);
+    maintainers = teams.freedesktop.members ++ (with maintainers; [ domenkozar obadz amaxine ]);
     platforms = platforms.linux;
   };
 }

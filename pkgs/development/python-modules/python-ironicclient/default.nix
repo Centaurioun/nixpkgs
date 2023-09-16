@@ -1,5 +1,5 @@
 { lib
-, buildPythonApplication
+, buildPythonPackage
 , fetchPypi
 , pbr
 , appdirs
@@ -18,13 +18,13 @@
 , oslotest
 }:
 
-buildPythonApplication rec {
+buildPythonPackage rec {
   pname = "python-ironicclient";
-  version = "5.0.0";
+  version = "5.4.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-mA8+4cvWhxPn7LGVcWvwxGRBnlM671YgFfE10zhVPtQ=";
+    hash = "sha256-Q9yGuYf9TS7RCo9aV1hnNSrHoll7AOUiSpzRYxi+JXU=";
   };
 
   propagatedBuildInputs = [
@@ -42,7 +42,7 @@ buildPythonApplication rec {
     stevedore
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     stestr
     requests-mock
     oslotest

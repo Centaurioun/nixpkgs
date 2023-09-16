@@ -17,10 +17,10 @@ let
   optionalNullInt = o: i: optional (i != null) (intOpt o i);
   optionalEmptyList = o: l: optional ([] != l) (lstOpt o l);
 
-  mkEnableTrueOption = name: mkEnableOption name // { default = true; };
+  mkEnableTrueOption = name: mkEnableOption (lib.mdDoc name) // { default = true; };
 
   mkEndpointOpt = name: addr: port: {
-    enable = mkEnableOption name;
+    enable = mkEnableOption (lib.mdDoc name);
     name = mkOption {
       type = types.str;
       default = name;
@@ -169,15 +169,15 @@ let
         (boolOpt "enabled" proto.enable)
         (strOpt "address" proto.address)
         (intOpt "port" proto.port)
-        ] ++ (if proto ? keys then optionalNullString "keys" proto.keys else [])
-        ++ (if proto ? auth then optionalNullBool "auth" proto.auth else [])
-        ++ (if proto ? user then optionalNullString "user" proto.user else [])
-        ++ (if proto ? pass then optionalNullString "pass" proto.pass else [])
-        ++ (if proto ? strictHeaders then optionalNullBool "strictheaders" proto.strictHeaders else [])
-        ++ (if proto ? hostname then optionalNullString "hostname" proto.hostname else [])
-        ++ (if proto ? outproxy then optionalNullString "outproxy" proto.outproxy else [])
-        ++ (if proto ? outproxyPort then optionalNullInt "outproxyport" proto.outproxyPort else [])
-        ++ (if proto ? outproxyEnable then optionalNullBool "outproxy.enabled" proto.outproxyEnable else []);
+        ] ++ (optionals (proto ? keys) (optionalNullString "keys" proto.keys))
+        ++ (optionals (proto ? auth) (optionalNullBool "auth" proto.auth))
+        ++ (optionals (proto ? user) (optionalNullString "user" proto.user))
+        ++ (optionals (proto ? pass) (optionalNullString "pass" proto.pass))
+        ++ (optionals (proto ? strictHeaders) (optionalNullBool "strictheaders" proto.strictHeaders))
+        ++ (optionals (proto ? hostname) (optionalNullString "hostname" proto.hostname))
+        ++ (optionals (proto ? outproxy) (optionalNullString "outproxy" proto.outproxy))
+        ++ (optionals (proto ? outproxyPort) (optionalNullInt "outproxyport" proto.outproxyPort))
+        ++ (optionals (proto ? outproxyEnable) (optionalNullBool "outproxy.enabled" proto.outproxyEnable));
         in (concatStringsSep "\n" protoOpts)
       ));
   in
@@ -192,21 +192,14 @@ let
         "type = client"
         (intOpt "port" tun.port)
         (strOpt "destination" tun.destination)
-        ] ++ (if tun ? destinationPort then optionalNullInt "destinationport" tun.destinationPort else [])
-        ++ (if tun ? keys then
-            optionalNullString "keys" tun.keys else [])
-        ++ (if tun ? address then
-            optionalNullString "address" tun.address else [])
-        ++ (if tun ? inbound.length then
-            optionalNullInt "inbound.length" tun.inbound.length else [])
-        ++ (if tun ? inbound.quantity then
-            optionalNullInt "inbound.quantity" tun.inbound.quantity else [])
-        ++ (if tun ? outbound.length then
-            optionalNullInt "outbound.length" tun.outbound.length else [])
-        ++ (if tun ? outbound.quantity then
-            optionalNullInt "outbound.quantity" tun.outbound.quantity else [])
-        ++ (if tun ? crypto.tagsToSend then
-            optionalNullInt "crypto.tagstosend" tun.crypto.tagsToSend else []);
+        ] ++ (optionals (tun ? destinationPort) (optionalNullInt "destinationport" tun.destinationPort))
+        ++ (optionals (tun ? keys) (optionalNullString "keys" tun.keys))
+        ++ (optionals (tun ? address) (optionalNullString "address" tun.address))
+        ++ (optionals (tun ? inbound.length) (optionalNullInt "inbound.length" tun.inbound.length))
+        ++ (optionals (tun ? inbound.quantity) (optionalNullInt "inbound.quantity" tun.inbound.quantity))
+        ++ (optionals (tun ? outbound.length) (optionalNullInt "outbound.length" tun.outbound.length))
+        ++ (optionals (tun ? outbound.quantity) (optionalNullInt "outbound.quantity" tun.outbound.quantity))
+        ++ (optionals (tun ? crypto.tagsToSend) (optionalNullInt "crypto.tagstosend" tun.crypto.tagsToSend));
         in concatStringsSep "\n" outTunOpts))
     (flip map
       (collect (tun: tun ? port && tun ? address) cfg.inTunnels)
@@ -215,14 +208,10 @@ let
         "type = server"
         (intOpt "port" tun.port)
         (strOpt "host" tun.address)
-      ] ++ (if tun ? destination then
-            optionalNullString "destination" tun.destination else [])
-        ++ (if tun ? keys then
-            optionalNullString "keys" tun.keys else [])
-        ++ (if tun ? inPort then
-            optionalNullInt "inport" tun.inPort else [])
-        ++ (if tun ? accessList then
-            optionalEmptyList "accesslist" tun.accessList else []);
+      ] ++ (optionals (tun ? destination) (optionalNullString "destination" tun.destination))
+        ++ (optionals (tun ? keys) (optionalNullString "keys" tun.keys))
+        ++ (optionals (tun ? inPort) (optionalNullInt "inport" tun.inPort))
+        ++ (optionals (tun ? accessList) (optionalEmptyList "accesslist" tun.accessList));
         in concatStringsSep "\n" inTunOpts))];
     in pkgs.writeText "i2pd-tunnels.conf" opts;
 
@@ -247,8 +236,8 @@ in
 
     services.i2pd = {
 
-      enable = mkEnableOption "I2Pd daemon" // {
-        description = ''
+      enable = mkEnableOption (lib.mdDoc "I2Pd daemon") // {
+        description = lib.mdDoc ''
           Enables I2Pd as a running service upon activation.
           Please read http://i2pd.readthedocs.io/en/latest/ for further
           configuration help.
@@ -276,7 +265,7 @@ in
         '';
       };
 
-      logCLFTime = mkEnableOption "Full CLF-formatted date and time to log";
+      logCLFTime = mkEnableOption (lib.mdDoc "Full CLF-formatted date and time to log");
 
       address = mkOption {
         type = with types; nullOr str;
@@ -345,14 +334,14 @@ in
       ntcp = mkEnableTrueOption "ntcp";
       ssu = mkEnableTrueOption "ssu";
 
-      notransit = mkEnableOption "notransit" // {
-        description = ''
+      notransit = mkEnableOption (lib.mdDoc "notransit") // {
+        description = lib.mdDoc ''
           Tells the router to not accept transit tunnels during startup.
         '';
       };
 
-      floodfill = mkEnableOption "floodfill" // {
-        description = ''
+      floodfill = mkEnableOption (lib.mdDoc "floodfill") // {
+        description = lib.mdDoc ''
           If the router is declared to be unreachable and needs introduction nodes.
         '';
       };
@@ -383,10 +372,10 @@ in
       };
 
       enableIPv4 = mkEnableTrueOption "IPv4 connectivity";
-      enableIPv6 = mkEnableOption "IPv6 connectivity";
+      enableIPv6 = mkEnableOption (lib.mdDoc "IPv6 connectivity");
       nat = mkEnableTrueOption "NAT bypass";
 
-      upnp.enable = mkEnableOption "UPnP service discovery";
+      upnp.enable = mkEnableOption (lib.mdDoc "UPnP service discovery");
       upnp.name = mkOption {
         type = types.str;
         default = "I2Pd";
@@ -396,17 +385,17 @@ in
       };
 
       precomputation.elgamal = mkEnableTrueOption "Precomputed ElGamal tables" // {
-        description = ''
+        description = lib.mdDoc ''
           Whenever to use precomputated tables for ElGamal.
-          <command>i2pd</command> defaults to <literal>false</literal>
+          {command}`i2pd` defaults to `false`
           to save 64M of memory (and looses some performance).
 
-          We default to <literal>true</literal> as that is what most
+          We default to `true` as that is what most
           users want anyway.
         '';
       };
 
-      reseed.verify = mkEnableOption "SU3 signature verification";
+      reseed.verify = mkEnableOption (lib.mdDoc "SU3 signature verification");
 
       reseed.file = mkOption {
         type = with types; nullOr str;
@@ -467,13 +456,13 @@ in
         '';
       };
 
-      trust.enable = mkEnableOption "Explicit trust options";
+      trust.enable = mkEnableOption (lib.mdDoc "Explicit trust options");
 
       trust.family = mkOption {
         type = with types; nullOr str;
         default = null;
         description = lib.mdDoc ''
-          Router Familiy to trust for first hops.
+          Router Family to trust for first hops.
         '';
       };
 
@@ -485,7 +474,7 @@ in
         '';
       };
 
-      trust.hidden = mkEnableOption "Router concealment";
+      trust.hidden = mkEnableOption (lib.mdDoc "Router concealment");
 
       websocket = mkEndpointOpt "websockets" "127.0.0.1" 7666;
 
@@ -493,9 +482,9 @@ in
       exploratory.outbound = i2cpOpts "exploratory";
 
       ntcp2.enable = mkEnableTrueOption "NTCP2";
-      ntcp2.published = mkEnableOption "NTCP2 publication";
+      ntcp2.published = mkEnableOption (lib.mdDoc "NTCP2 publication");
       ntcp2.port = mkOption {
-        type = types.int;
+        type = types.port;
         default = 0;
         description = lib.mdDoc ''
           Port to listen for incoming NTCP2 connections (0=auto).
@@ -550,7 +539,7 @@ in
         '';
       };
 
-      yggdrasil.enable = mkEnableOption "Yggdrasil";
+      yggdrasil.enable = mkEnableOption (lib.mdDoc "Yggdrasil");
 
       yggdrasil.address = mkOption {
         type = with types; nullOr str;
@@ -563,7 +552,7 @@ in
 
       proto.http = (mkEndpointOpt "http" "127.0.0.1" 7070) // {
 
-        auth = mkEnableOption "Webconsole authentication";
+        auth = mkEnableOption (lib.mdDoc "Webconsole authentication");
 
         user = mkOption {
           type = types.str;
@@ -608,7 +597,7 @@ in
       };
       proto.socksProxy = (mkKeyedEndpointOpt "socksproxy" "127.0.0.1" 4447 "socksproxy-keys.dat")
       // {
-        outproxyEnable = mkEnableOption "SOCKS outproxy";
+        outproxyEnable = mkEnableOption (lib.mdDoc "SOCKS outproxy");
         outproxy = mkOption {
           type = types.str;
           default = "127.0.0.1";

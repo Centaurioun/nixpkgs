@@ -7,6 +7,7 @@
 , wrapQtAppsHook
 , gst_all_1
 , qtbase
+, qtsvg
 , qtmultimedia
 , qttools
 , qtwayland
@@ -22,17 +23,18 @@
 # choose renderer: mupdf or poppler or both (not recommended)
 , usePoppler ? false
 , useMupdf ? true
+, useExternalRenderer ? false
 }:
 
 stdenv.mkDerivation rec {
   pname = "beamerpresenter";
-  version = "0.2.2";
+  version = "0.2.4";
 
   src = fetchFromGitHub {
     owner = "stiglers-eponym";
     repo = "BeamerPresenter";
     rev = "v${version}";
-    sha256 = "16v263nnnipih3lxg95rmwz0ihnvpl4n1wlj9r6zavnspzlp9dvb";
+    hash = "sha256-UQbyzkFjrIDPcrE6yGuOWsXNjz8jWyJEWiQwHmf91/8=";
   };
 
   nativeBuildInputs = [
@@ -50,8 +52,10 @@ stdenv.mkDerivation rec {
     gst_all_1.gst-plugins-good
     zlib
     qtbase
+    qtsvg
     qtmultimedia
     qttools
+  ] ++ lib.optionals stdenv.isLinux [
     qtwayland
   ] ++ lib.optionals useMupdf [
     freetype
@@ -67,8 +71,11 @@ stdenv.mkDerivation rec {
     "-DGIT_VERSION=OFF"
     "-DUSE_POPPLER=${if usePoppler then "ON" else "OFF"}"
     "-DUSE_MUPDF=${if useMupdf then "ON" else "OFF"}"
-    "-DUSE_MUJS=OFF"
-    "-DUSE_GUMBO=ON"
+    "-DUSE_QTPDF=OFF"
+    "-DLINK_MUPDF_THIRD=ON"
+    "-DUSE_EXTERNAL_RENDERER=${if useExternalRenderer then "ON" else "OFF"}"
+    "-DLINK_MUJS=OFF"
+    "-DLINK_GUMBO=ON"
     "-DUSE_TRANSLATIONS=ON"
     "-DQT_VERSION_MAJOR=${lib.versions.major qtbase.version}"
   ];

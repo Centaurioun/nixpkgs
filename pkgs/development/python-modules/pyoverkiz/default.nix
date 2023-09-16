@@ -2,6 +2,7 @@
 , aiohttp
 , attrs
 , backoff
+, backports-strenum
 , boto3
 , buildPythonPackage
 , fetchFromGitHub
@@ -15,7 +16,7 @@
 
 buildPythonPackage rec {
   pname = "pyoverkiz";
-  version = "1.5.0";
+  version = "1.10.1";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
@@ -24,31 +25,32 @@ buildPythonPackage rec {
     owner = "iMicknl";
     repo = "python-overkiz-api";
     rev = "refs/tags/v${version}";
-    hash = "sha256-xshqcAXj6lGpnTIHhx1A2c+Vso1q8kAwZW7v6XIilj0=";
+    hash = "sha256-tb0xU1H1VrWTuObCg1+mFkzawAzrknO3fER7cN2St7U=";
   };
+
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace 'pyhumps = "^3.0.2,!=3.7.3"' 'pyhumps = "^3.0.2"'
+  '';
 
   nativeBuildInputs = [
     poetry-core
   ];
 
   propagatedBuildInputs = [
-    attrs
     aiohttp
+    attrs
     backoff
-    pyhumps
+    backports-strenum
     boto3
+    pyhumps
     warrant-lite
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest-asyncio
     pytestCheckHook
   ];
-
-  postPatch = ''
-    substituteInPlace pyproject.toml \
-      --replace 'backoff = "^1.10.0"' 'backoff = "*"'
-  '';
 
   pythonImportsCheck = [
     "pyoverkiz"
@@ -57,6 +59,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Module to interact with the Somfy TaHoma API or other OverKiz APIs";
     homepage = "https://github.com/iMicknl/python-overkiz-api";
+    changelog = "https://github.com/iMicknl/python-overkiz-api/releases/tag/v${version}";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ fab ];
   };

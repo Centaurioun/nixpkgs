@@ -4,7 +4,6 @@
 , cmake
 , extra-cmake-modules
 , inotify-tools
-, installShellFiles
 , libcloudproviders
 , librsvg
 , libsecret
@@ -26,7 +25,7 @@
 
 mkDerivation rec {
   pname = "nextcloud-client";
-  version = "3.5.4";
+  version = "3.9.4";
 
   outputs = [ "out" "dev" ];
 
@@ -34,7 +33,7 @@ mkDerivation rec {
     owner = "nextcloud";
     repo = "desktop";
     rev = "v${version}";
-    sha256 = "sha256-ennKNUuoyhpVfG1XPzJKrop0i77BAB3C2MNqZPOXNkc=";
+    sha256 = "sha256-h8lOstl085haesmCmzq2o0OlQrO5U/mfGngQunynIuQ=";
   };
 
   patches = [
@@ -77,16 +76,18 @@ mkDerivation rec {
 
   qtWrapperArgs = [
     "--prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libsecret ]}"
-    # See also: https://bugreports.qt.io/browse/QTBUG-85967
-    "--set QML_DISABLE_DISK_CACHE 1"
     # make xdg-open overrideable at runtime
     "--suffix PATH : ${lib.makeBinPath [ xdg-utils ]}"
   ];
 
   cmakeFlags = [
+    "-DBUILD_UPDATER=off"
     "-DCMAKE_INSTALL_LIBDIR=lib" # expected to be prefix-relative by build code setting RPATH
     "-DNO_SHIBBOLETH=1" # allows to compile without qtwebkit
   ];
+
+  # causes redefinition of _FORTIFY_SOURCE
+  hardeningDisable = [ "fortify3" ];
 
   postBuild = ''
     make doc-man

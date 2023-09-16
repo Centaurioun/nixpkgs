@@ -30,7 +30,7 @@ let
 
   # these config files will be merged one after the other to build the final config
   configFiles = [
-    "${pkgs.mjolnir}/share/mjolnir/config/default.yaml"
+    "${pkgs.mjolnir}/libexec/mjolnir/deps/mjolnir/config/default.yaml"
     moduleConfigFile
   ];
 
@@ -65,7 +65,7 @@ let
 in
 {
   options.services.mjolnir = {
-    enable = mkEnableOption "Mjolnir, a moderation tool for Matrix";
+    enable = mkEnableOption (lib.mdDoc "Mjolnir, a moderation tool for Matrix");
 
     homeserverUrl = mkOption {
       type = types.str;
@@ -95,10 +95,10 @@ in
       default = { };
       type = types.submodule {
         options = {
-          enable = mkEnableOption ''
+          enable = mkEnableOption (lib.mdDoc ''
             If true, accessToken is ignored and the username/password below will be
             used instead. The access token of the bot will be stored in the dataPath.
-          '';
+          '');
 
           username = mkOption {
             type = types.str;
@@ -200,7 +200,7 @@ in
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = ''${pkgs.mjolnir}/bin/mjolnir'';
+        ExecStart = ''${pkgs.mjolnir}/bin/mjolnir --mjolnir-config ./config/default.yaml'';
         ExecStartPre = [ generateConfig ];
         WorkingDirectory = cfg.dataPath;
         StateDirectory = "mjolnir";
@@ -236,7 +236,7 @@ in
   };
 
   meta = {
-    doc = ./mjolnir.xml;
+    doc = ./mjolnir.md;
     maintainers = with maintainers; [ jojosch ];
   };
 }

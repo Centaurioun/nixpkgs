@@ -12,13 +12,13 @@
 
 stdenv.mkDerivation rec {
   pname = "zint";
-  version = "2.11.1";
+  version = "2.12.0";
 
   src = fetchFromGitHub {
     owner = "zint";
     repo = "zint";
     rev = version;
-    sha256 = "sha256-ozhXy7ftmGz1XvmF8AS1ifWJ3Q5hLSsysB8qLUP60n8=";
+    hash = "sha256-Ay6smir6zUpadmw1WpU+F7e9t7Gk3JNVtf2VVu92bDk=";
   };
 
   outputs = [ "out" "dev" ];
@@ -53,5 +53,6 @@ stdenv.mkDerivation rec {
     changelog = "https://github.com/zint/zint/blob/${version}/ChangeLog";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ azahi ];
+    platforms = platforms.all;
   };
 }

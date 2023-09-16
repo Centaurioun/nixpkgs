@@ -51,14 +51,14 @@ let
     type = with types; nullOr str;
     default = null;
     example = "0.0.0.0";
-    description = ''
+    description = lib.mdDoc ''
       IPv4 or IPv6 (if between brackets) address.
     '';
   };
   optionUnix = mkOption {
     type = with types; nullOr path;
     default = null;
-    description = ''
+    description = lib.mdDoc ''
       Unix domain socket path to use.
     '';
   };
@@ -146,7 +146,7 @@ let
     ]))];
     description = lib.mdDoc (descriptionGeneric optionName);
   };
-  optionBandwith = optionName: mkOption {
+  optionBandwidth = optionName: mkOption {
     type = with types; nullOr (either int str);
     default = null;
     description = lib.mdDoc (descriptionGeneric optionName);
@@ -205,7 +205,7 @@ in
     (mkRemovedOptionModule [ "services" "tor" "client" "transparentProxy" "isolationOptions" ] "Use services.tor.settings.TransPort instead.")
     (mkRemovedOptionModule [ "services" "tor" "client" "transparentProxy" "listenAddress" ] "Use services.tor.settings.TransPort instead.")
     (mkRenamedOptionModule [ "services" "tor" "controlPort" ] [ "services" "tor" "settings" "ControlPort" ])
-    (mkRemovedOptionModule [ "services" "tor" "extraConfig" ] "Plese use services.tor.settings instead.")
+    (mkRemovedOptionModule [ "services" "tor" "extraConfig" ] "Please use services.tor.settings instead.")
     (mkRenamedOptionModule [ "services" "tor" "hiddenServices" ] [ "services" "tor" "relay" "onionServices" ])
     (mkRenamedOptionModule [ "services" "tor" "relay" "accountingMax" ] [ "services" "tor" "settings" "AccountingMax" ])
     (mkRenamedOptionModule [ "services" "tor" "relay" "accountingStart" ] [ "services" "tor" "settings" "AccountingStart" ])
@@ -224,11 +224,11 @@ in
 
   options = {
     services.tor = {
-      enable = mkEnableOption ''Tor daemon.
+      enable = mkEnableOption (lib.mdDoc ''Tor daemon.
         By default, the daemon is run without
-        relay, exit, bridge or client connectivity'';
+        relay, exit, bridge or client connectivity'');
 
-      openFirewall = mkEnableOption "opening of the relay port(s) in the firewall";
+      openFirewall = mkEnableOption (lib.mdDoc "opening of the relay port(s) in the firewall");
 
       package = mkOption {
         type = types.package;
@@ -237,19 +237,19 @@ in
         description = lib.mdDoc "Tor package to use.";
       };
 
-      enableGeoIP = mkEnableOption ''use of GeoIP databases.
+      enableGeoIP = mkEnableOption (lib.mdDoc ''use of GeoIP databases.
         Disabling this will disable by-country statistics for bridges and relays
-        and some client and third-party software functionality'' // { default = true; };
+        and some client and third-party software functionality'') // { default = true; };
 
-      controlSocket.enable = mkEnableOption ''control socket,
-        created in <literal>${runDir}/control</literal>'';
+      controlSocket.enable = mkEnableOption (lib.mdDoc ''control socket,
+        created in `${runDir}/control`'');
 
       client = {
-        enable = mkEnableOption ''the routing of application connections.
-          You might want to disable this if you plan running a dedicated Tor relay'';
+        enable = mkEnableOption (lib.mdDoc ''the routing of application connections.
+          You might want to disable this if you plan running a dedicated Tor relay'');
 
-        transparentProxy.enable = mkEnableOption "transparent proxy";
-        dns.enable = mkEnableOption "DNS resolver";
+        transparentProxy.enable = mkEnableOption (lib.mdDoc "transparent proxy");
+        dns.enable = mkEnableOption (lib.mdDoc "DNS resolver");
 
         socksListenAddress = mkOption {
           type = optionSOCKSPort false;
@@ -288,146 +288,104 @@ in
       };
 
       relay = {
-        enable = mkEnableOption ''relaying of Tor traffic for others.
+        enable = mkEnableOption (lib.mdDoc "tor relaying") // {
+          description = lib.mdDoc ''
+            Whether to enable relaying of Tor traffic for others.
 
-          See <link xlink:href="https://www.torproject.org/docs/tor-doc-relay"/>
-          for details.
+            See <https://www.torproject.org/docs/tor-doc-relay>
+            for details.
 
-          Setting this to true requires setting
-          <option>services.tor.relay.role</option>
-          and
-          <option>services.tor.settings.ORPort</option>
-          options'';
+            Setting this to true requires setting
+            {option}`services.tor.relay.role`
+            and
+            {option}`services.tor.settings.ORPort`
+            options.
+          '';
+        };
 
         role = mkOption {
           type = types.enum [ "exit" "relay" "bridge" "private-bridge" ];
-          description = ''
+          description = lib.mdDoc ''
             Your role in Tor network. There're several options:
 
-            <variablelist>
-            <varlistentry>
-              <term><literal>exit</literal></term>
-              <listitem>
-                <para>
-                  An exit relay. This allows Tor users to access regular
-                  Internet services through your public IP.
-                </para>
+            - `exit`:
+              An exit relay. This allows Tor users to access regular
+              Internet services through your public IP.
 
-                <important><para>
-                  Running an exit relay may expose you to abuse
-                  complaints. See
-                  <link xlink:href="https://www.torproject.org/faq.html.en#ExitPolicies"/>
-                  for more info.
-                </para></important>
+              You can specify which services Tor users may access via
+              your exit relay using {option}`settings.ExitPolicy` option.
 
-                <para>
-                  You can specify which services Tor users may access via
-                  your exit relay using <option>settings.ExitPolicy</option> option.
-                </para>
-              </listitem>
-            </varlistentry>
+            - `relay`:
+              Regular relay. This allows Tor users to relay onion
+              traffic to other Tor nodes, but not to public
+              Internet.
 
-            <varlistentry>
-              <term><literal>relay</literal></term>
-              <listitem>
-                <para>
-                  Regular relay. This allows Tor users to relay onion
-                  traffic to other Tor nodes, but not to public
-                  Internet.
-                </para>
+              See
+              <https://www.torproject.org/docs/tor-doc-relay.html.en>
+              for more info.
 
-                <important><para>
-                  Note that some misconfigured and/or disrespectful
-                  towards privacy sites will block you even if your
-                  relay is not an exit relay. That is, just being listed
-                  in a public relay directory can have unwanted
-                  consequences.
+            - `bridge`:
+              Regular bridge. Works like a regular relay, but
+              doesn't list you in the public relay directory and
+              hides your Tor node behind obfs4proxy.
 
-                  Which means you might not want to use
-                  this role if you browse public Internet from the same
-                  network as your relay, unless you want to write
-                  e-mails to those sites (you should!).
-                </para></important>
+              Using this option will make Tor advertise your bridge
+              to users through various mechanisms like
+              <https://bridges.torproject.org/>, though.
 
-                <para>
-                  See
-                  <link xlink:href="https://www.torproject.org/docs/tor-doc-relay.html.en"/>
-                  for more info.
-                </para>
-              </listitem>
-            </varlistentry>
+              See <https://www.torproject.org/docs/bridges.html.en>
+              for more info.
 
-            <varlistentry>
-              <term><literal>bridge</literal></term>
-              <listitem>
-                <para>
-                  Regular bridge. Works like a regular relay, but
-                  doesn't list you in the public relay directory and
-                  hides your Tor node behind obfs4proxy.
-                </para>
+            - `private-bridge`:
+              Private bridge. Works like regular bridge, but does
+              not advertise your node in any way.
 
-                <para>
-                  Using this option will make Tor advertise your bridge
-                  to users through various mechanisms like
-                  <link xlink:href="https://bridges.torproject.org/"/>, though.
-                </para>
+              Using this role means that you won't contribute to Tor
+              network in any way unless you advertise your node
+              yourself in some way.
 
-                <important>
-                  <para>
-                    WARNING: THE FOLLOWING PARAGRAPH IS NOT LEGAL ADVICE.
-                    Consult with your lawyer when in doubt.
-                  </para>
+              Use this if you want to run a private bridge, for
+              example because you'll give out your bridge addr
+              manually to your friends.
 
-                  <para>
-                    This role should be safe to use in most situations
-                    (unless the act of forwarding traffic for others is
-                    a punishable offence under your local laws, which
-                    would be pretty insane as it would make ISP illegal).
-                  </para>
-                </important>
+              Switching to this role after measurable time in
+              "bridge" role is pretty useless as some Tor users
+              would have learned about your node already. In the
+              latter case you can still change
+              {option}`port` option.
 
-                <para>
-                  See <link xlink:href="https://www.torproject.org/docs/bridges.html.en"/>
-                  for more info.
-                </para>
-              </listitem>
-            </varlistentry>
+              See <https://www.torproject.org/docs/bridges.html.en>
+              for more info.
 
-            <varlistentry>
-              <term><literal>private-bridge</literal></term>
-              <listitem>
-                <para>
-                  Private bridge. Works like regular bridge, but does
-                  not advertise your node in any way.
-                </para>
+            ::: {.important}
+            Running an exit relay may expose you to abuse
+            complaints. See
+            <https://www.torproject.org/faq.html.en#ExitPolicies>
+            for more info.
+            :::
 
-                <para>
-                  Using this role means that you won't contribute to Tor
-                  network in any way unless you advertise your node
-                  yourself in some way.
-                </para>
+            ::: {.important}
+            Note that some misconfigured and/or disrespectful
+            towards privacy sites will block you even if your
+            relay is not an exit relay. That is, just being listed
+            in a public relay directory can have unwanted
+            consequences.
 
-                <para>
-                  Use this if you want to run a private bridge, for
-                  example because you'll give out your bridge addr
-                  manually to your friends.
-                </para>
+            Which means you might not want to use
+            this role if you browse public Internet from the same
+            network as your relay, unless you want to write
+            e-mails to those sites (you should!).
+            :::
 
-                <para>
-                  Switching to this role after measurable time in
-                  "bridge" role is pretty useless as some Tor users
-                  would have learned about your node already. In the
-                  latter case you can still change
-                  <option>port</option> option.
-                </para>
+            ::: {.important}
+            WARNING: THE FOLLOWING PARAGRAPH IS NOT LEGAL ADVICE.
+            Consult with your lawyer when in doubt.
 
-                <para>
-                  See <link xlink:href="https://www.torproject.org/docs/bridges.html.en"/>
-                  for more info.
-                </para>
-              </listitem>
-            </varlistentry>
-            </variablelist>
+            The `bridge` role should be safe to use in most situations
+            (unless the act of forwarding traffic for others is
+            a punishable offence under your local laws, which
+            would be pretty insane as it would make ISP illegal).
+            :::
           '';
         };
 
@@ -588,7 +546,7 @@ in
             };
           options.Address = optionString "Address";
           options.AssumeReachable = optionBool "AssumeReachable";
-          options.AccountingMax = optionBandwith "AccountingMax";
+          options.AccountingMax = optionBandwidth "AccountingMax";
           options.AccountingStart = optionString "AccountingStart";
           options.AuthDirHasIPv6Connectivity = optionBool "AuthDirHasIPv6Connectivity";
           options.AuthDirListBadExits = optionBool "AuthDirListBadExits";
@@ -601,8 +559,8 @@ in
             default = [".onion" ".exit"];
             example = [".onion"];
           };
-          options.BandwidthBurst = optionBandwith "BandwidthBurst";
-          options.BandwidthRate = optionBandwith "BandwidthRate";
+          options.BandwidthBurst = optionBandwidth "BandwidthBurst";
+          options.BandwidthRate = optionBandwidth "BandwidthRate";
           options.BridgeAuthoritativeDir = optionBool "BridgeAuthoritativeDir";
           options.BridgeRecordUsageByCountry = optionBool "BridgeRecordUsageByCountry";
           options.BridgeRelay = optionBool "BridgeRelay" // { default = false; };
@@ -751,7 +709,7 @@ in
           options.LogMessageDomains = optionBool "LogMessageDomains";
           options.LongLivedPorts = optionPorts "LongLivedPorts";
           options.MainloopStats = optionBool "MainloopStats";
-          options.MaxAdvertisedBandwidth = optionBandwith "MaxAdvertisedBandwidth";
+          options.MaxAdvertisedBandwidth = optionBandwidth "MaxAdvertisedBandwidth";
           options.MaxCircuitDirtiness = optionInt "MaxCircuitDirtiness";
           options.MaxClientCircuitsPending = optionInt "MaxClientCircuitsPending";
           options.NATDPort = optionIsolablePorts "NATDPort";
@@ -761,8 +719,8 @@ in
           options.OfflineMasterKey = optionBool "OfflineMasterKey";
           options.OptimisticData = optionBool "OptimisticData"; # default is null and like "auto"
           options.PaddingStatistics = optionBool "PaddingStatistics";
-          options.PerConnBWBurst = optionBandwith "PerConnBWBurst";
-          options.PerConnBWRate = optionBandwith "PerConnBWRate";
+          options.PerConnBWBurst = optionBandwidth "PerConnBWBurst";
+          options.PerConnBWRate = optionBandwidth "PerConnBWRate";
           options.PidFile = optionPath "PidFile";
           options.ProtocolWarnings = optionBool "ProtocolWarnings";
           options.PublishHidServDescriptors = optionBool "PublishHidServDescriptors";
@@ -774,8 +732,8 @@ in
           options.ReducedExitPolicy = optionBool "ReducedExitPolicy";
           options.RefuseUnknownExits = optionBool "RefuseUnknownExits"; # default is null and like "auto"
           options.RejectPlaintextPorts = optionPorts "RejectPlaintextPorts";
-          options.RelayBandwidthBurst = optionBandwith "RelayBandwidthBurst";
-          options.RelayBandwidthRate = optionBandwith "RelayBandwidthRate";
+          options.RelayBandwidthBurst = optionBandwidth "RelayBandwidthBurst";
+          options.RelayBandwidthRate = optionBandwidth "RelayBandwidthRate";
           #options.RunAsDaemon
           options.Sandbox = optionBool "Sandbox";
           options.ServerDNSAllowBrokenConfig = optionBool "ServerDNSAllowBrokenConfig";
@@ -811,7 +769,7 @@ in
           };
           options.SOCKSPort = mkOption {
             description = lib.mdDoc (descriptionGeneric "SOCKSPort");
-            default = if cfg.settings.HiddenServiceNonAnonymousMode == true then [{port = 0;}] else [];
+            default = lib.optionals cfg.settings.HiddenServiceNonAnonymousMode [{port = 0;}];
             defaultText = literalExpression ''
               if config.${opt.settings}.HiddenServiceNonAnonymousMode == true
               then [ { port = 0; } ]
@@ -858,13 +816,13 @@ in
         always create a container/VM with a separate Tor daemon instance.
       '' ++
       flatten (mapAttrsToList (n: o:
-        optional (o.settings.HiddenServiceVersion == 2) [
+        optionals (o.settings.HiddenServiceVersion == 2) [
           (optional (o.settings.HiddenServiceExportCircuitID != null) ''
             HiddenServiceExportCircuitID is used in the HiddenService: ${n}
             but this option is only for v3 hidden services.
           '')
         ] ++
-        optional (o.settings.HiddenServiceVersion != 2) [
+        optionals (o.settings.HiddenServiceVersion != 2) [
           (optional (o.settings.HiddenServiceAuthorizeClient != null) ''
             HiddenServiceAuthorizeClient is used in the HiddenService: ${n}
             but this option is only for v2 hidden services.
@@ -939,8 +897,7 @@ in
       allowedTCPPorts =
         concatMap (o:
           if isInt o && o > 0 then [o]
-          else if o ? "port" && isInt o.port && o.port > 0 then [o.port]
-          else []
+          else optionals (o ? "port" && isInt o.port && o.port > 0) [o.port]
         ) (flatten [
           cfg.settings.ORPort
           cfg.settings.DirPort

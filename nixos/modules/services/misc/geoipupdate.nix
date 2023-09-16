@@ -11,9 +11,9 @@ in
 
   options = {
     services.geoipupdate = {
-      enable = lib.mkEnableOption ''
+      enable = lib.mkEnableOption (lib.mdDoc ''
         periodic downloading of GeoIP databases using geoipupdate.
-      '';
+      '');
 
       interval = lib.mkOption {
         type = lib.types.str;
@@ -183,7 +183,7 @@ in
         DynamicUser = true;
         ReadWritePaths = cfg.settings.DatabaseDirectory;
         RuntimeDirectory = "geoipupdate";
-        RuntimeDirectoryMode = 0700;
+        RuntimeDirectoryMode = "0700";
         CapabilityBoundingSet = "";
         PrivateDevices = true;
         PrivateMounts = true;
@@ -197,7 +197,7 @@ in
         ProtectKernelTunables = true;
         ProtectProc = "invisible";
         ProcSubset = "pid";
-        SystemCallFilter = [ "@system-service" "~@privileged" "~@resources" ];
+        SystemCallFilter = [ "@system-service" "~@privileged" ];
         RestrictAddressFamilies = [ "AF_INET" "AF_INET6" ];
         RestrictRealtime = true;
         RestrictNamespaces = true;

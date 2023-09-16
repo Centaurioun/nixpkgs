@@ -24,7 +24,7 @@ in
   {
     options = {
       services.mirakurun = {
-        enable = mkEnableOption "the Mirakurun DVR Tuner Server";
+        enable = mkEnableOption (lib.mdDoc "the Mirakurun DVR Tuner Server");
 
         port = mkOption {
           type = with types; nullOr port;
@@ -38,16 +38,14 @@ in
         openFirewall = mkOption {
           type = types.bool;
           default = false;
-          description = ''
+          description = lib.mdDoc ''
             Open ports in the firewall for Mirakurun.
 
-            <warning>
-              <para>
-                Exposing Mirakurun to the open internet is generally advised
-                against. Only use it inside a trusted local network, or
-                consider putting it behind a VPN if you want remote access.
-              </para>
-            </warning>
+            ::: {.warning}
+            Exposing Mirakurun to the open internet is generally advised
+            against. Only use it inside a trusted local network, or
+            consider putting it behind a VPN if you want remote access.
+            :::
           '';
         };
 
@@ -156,6 +154,9 @@ in
         description = "Mirakurun user";
         group = "video";
         isSystemUser = true;
+
+        # NPM insists on creating ~/.npm
+        home = "/var/cache/mirakurun";
       };
 
       services.mirakurun.serverSettings = {
@@ -173,9 +174,10 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
         serviceConfig = {
-          ExecStart = "${mirakurun}/bin/mirakurun-start";
+          ExecStart = "${mirakurun}/bin/mirakurun start";
           User = username;
           Group = groupname;
+          CacheDirectory = "mirakurun";
           RuntimeDirectory="mirakurun";
           StateDirectory="mirakurun";
           Nice = -10;

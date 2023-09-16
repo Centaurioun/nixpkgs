@@ -11,7 +11,7 @@ let
     mapAttrsToList (n: v: ''"${n}": "${(concatStringsSep "," (map convType v))}"'')
       (foldAttrs (n: a: [n] ++ a) [] cfg.hardware);
   mergedConfig = with builtins;
-    mapAttrsToList (n: v: ''"${n}":  ${if isBool v then "" else ''"''}${convType v}${if isBool v then "" else ''"''}'')
+    mapAttrsToList (n: v: ''"${n}":  ${if isBool v then convType v else ''"${convType v}"''}'')
       cfg.config;
 
   cgminerConfig = pkgs.writeText "cgminer.conf" ''
@@ -31,7 +31,7 @@ in
 
     services.cgminer = {
 
-      enable = mkEnableOption "cgminer, an ASIC/FPGA/GPU miner for bitcoin and litecoin";
+      enable = mkEnableOption (lib.mdDoc "cgminer, an ASIC/FPGA/GPU miner for bitcoin and litecoin");
 
       package = mkOption {
         default = pkgs.cgminer;

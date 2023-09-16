@@ -15,11 +15,11 @@ let
     rm -f /var/lib/glusterd/secure-access
   '';
 
-  restartTriggers = if (cfg.tlsSettings != null) then [
+  restartTriggers = optionals (cfg.tlsSettings != null) [
     config.environment.etc."ssl/glusterfs.pem".source
     config.environment.etc."ssl/glusterfs.key".source
     config.environment.etc."ssl/glusterfs.ca".source
-  ] else [];
+  ];
 
   cfg = config.services.glusterfs;
 
@@ -33,7 +33,7 @@ in
 
     services.glusterfs = {
 
-      enable = mkEnableOption "GlusterFS Daemon";
+      enable = mkEnableOption (lib.mdDoc "GlusterFS Daemon");
 
       logLevel = mkOption {
         type = types.enum ["DEBUG" "INFO" "WARNING" "ERROR" "CRITICAL" "TRACE" "NONE"];

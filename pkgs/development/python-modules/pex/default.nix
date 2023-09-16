@@ -7,14 +7,14 @@
 
 buildPythonPackage rec {
   pname = "pex";
-  version = "2.1.103";
-  format = "flit";
+  version = "2.1.145";
+  format = "pyproject";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-B7zWM2Jrf9bRjrDWMDrP0KT7yzFpLnN7FXlGJtqJa/A=";
+    hash = "sha256-1rrIxOjOdGz+Xxb6QrH6Zth/eF+zaBOGFf4I9P17nbI=";
   };
 
   nativeBuildInputs = [
@@ -31,7 +31,8 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Python library and tool for generating .pex (Python EXecutable) files";
     homepage = "https://github.com/pantsbuild/pex";
+    changelog = "https://github.com/pantsbuild/pex/releases/tag/v${version}";
     license = licenses.asl20;
-    maintainers = with maintainers; [ copumpkin ];
+    maintainers = with maintainers; [ copumpkin phaer ];
   };
 }

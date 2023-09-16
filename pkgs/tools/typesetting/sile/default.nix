@@ -12,6 +12,8 @@
 , libiconv
 , makeFontsConf
 , gentium
+, runCommand
+, sile
 }:
 
 let
@@ -43,11 +45,11 @@ in
 
 stdenv.mkDerivation rec {
   pname = "sile";
-  version = "0.14.2";
+  version = "0.14.11";
 
   src = fetchurl {
     url = "https://github.com/sile-typesetter/sile/releases/download/v${version}/${pname}-${version}.tar.xz";
-    sha256 = "1q32a1ps66am6sbi3al528175kscq1fqc47gkdpb58r1kiyj9pm3";
+    sha256 = "sha256-JXlgiK1XyZZSe5QXz06zwEAnVYhiIZhhIaBmfxAgRS4=";
   };
 
   configureFlags = [
@@ -69,12 +71,20 @@ stdenv.mkDerivation rec {
   ]
   ++ lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.AppKit
   ;
-  checkInputs = [
-    poppler_utils
-  ];
   passthru = {
     # So it will be easier to inspect this environment, in comparison to others
     inherit luaEnv;
+    # Copied from Makefile.am
+    tests.test = lib.optionalAttrs (!(stdenv.isDarwin && stdenv.isAarch64)) (
+      runCommand "${pname}-test"
+        {
+          nativeBuildInputs = [ poppler_utils sile ];
+          inherit FONTCONFIG_FILE;
+        } ''
+        output=$(mktemp -t selfcheck-XXXXXX.pdf)
+        echo "<sile>foo</sile>" | sile -o $output -
+        pdfinfo $output | grep "SILE v${version}" > $out
+      '');
   };
 
   postPatch = ''
@@ -91,8 +101,6 @@ stdenv.mkDerivation rec {
     ];
   };
 
-  doCheck = true;
-
   enableParallelBuilding = true;
 
   preBuild = lib.optionalString stdenv.cc.isClang ''
@@ -100,13 +108,18 @@ stdenv.mkDerivation rec {
       --replace "ASSERT(ht && ht->table && iter);" "ASSERT(ht && iter);"
   '';
 
-  # Hack to avoid TMPDIR in RPATHs.
-  preFixup = ''rm -rf "$(pwd)" && mkdir "$(pwd)" '';
+  # remove forbidden references to $TMPDIR
+  preFixup = lib.optionalString stdenv.isLinux ''
+    for f in "$out"/bin/*; do
+      if isELF "$f"; then
+        patchelf --shrink-rpath --allowed-rpath-prefixes "$NIX_STORE" "$f"
+      fi
+    done
+  '';
 
   outputs = [ "out" "doc" "man" "dev" ];
 
   meta = with lib; {
-    broken = stdenv.isDarwin;
     description = "A typesetting system";
     longDescription = ''
       SILE is a typesetting system; its job is to produce beautiful

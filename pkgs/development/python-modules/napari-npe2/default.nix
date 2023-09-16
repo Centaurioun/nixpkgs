@@ -17,7 +17,8 @@
 
 buildPythonPackage rec {
   pname = "napari-npe2";
-  version = "0.5.1";
+  version = "0.7.0";
+
   format = "pyproject";
 
   disabled = pythonOlder "3.8";
@@ -26,7 +27,7 @@ buildPythonPackage rec {
     owner = "napari";
     repo = "npe2";
     rev = "refs/tags/v${version}";
-    hash = "sha256-+tTJrtJFUGwOhFzWgA5cFVp458DGuPVkErN/5O2LHk4=";
+    hash = "sha256-6kHyz7jMZO3385XaNJ4zFBoQiU1SIRyYZsUeMH5EBXo=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;

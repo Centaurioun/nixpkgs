@@ -12,7 +12,7 @@
 
 buildPythonPackage rec {
   pname = "atlassian-python-api";
-  version = "3.26.0";
+  version = "3.41.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -21,7 +21,7 @@ buildPythonPackage rec {
     owner = "atlassian-api";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "sha256-S1+QKSxoBSIebsqhx4OgQAOhNw3P674m/V203ylXB+c=";
+    hash = "sha256-DSIJOp5c/bqOOIZylhUGyIwIco5isA3ytCRR51WfTyI=";
   };
 
   propagatedBuildInputs = [
@@ -32,7 +32,7 @@ buildPythonPackage rec {
     six
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
   ];
 
@@ -43,6 +43,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Python Atlassian REST API Wrapper";
     homepage = "https://github.com/atlassian-api/atlassian-python-api";
+    changelog = "https://github.com/atlassian-api/atlassian-python-api/releases/tag/${version}";
     license = licenses.asl20;
     maintainers = with maintainers; [ arnoldfarkas ];
   };

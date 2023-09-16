@@ -6,7 +6,7 @@ let
   cfg = config.services.dex;
   fixClient = client: if client ? secretFile then ((builtins.removeAttrs client [ "secretFile" ]) // { secret = client.secretFile; }) else client;
   filteredSettings = mapAttrs (n: v: if n == "staticClients" then (builtins.map fixClient v) else v) cfg.settings;
-  secretFiles = flatten (builtins.map (c: if c ? secretFile then [ c.secretFile ] else []) (cfg.settings.staticClients or []));
+  secretFiles = flatten (builtins.map (c: optional (c ? secretFile) c.secretFile) (cfg.settings.staticClients or []));
 
   settingsFormat = pkgs.formats.yaml {};
   configFile = settingsFormat.generate "config.yaml" filteredSettings;
@@ -19,13 +19,13 @@ let
 in
 {
   options.services.dex = {
-    enable = mkEnableOption "the OpenID Connect and OAuth2 identity provider";
+    enable = mkEnableOption (lib.mdDoc "the OpenID Connect and OAuth2 identity provider");
 
     environmentFile = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = ''
-        Environment file (see <literal>systemd.exec(5)</literal>
+      description = lib.mdDoc ''
+        Environment file (see `systemd.exec(5)`
         "EnvironmentFile=" section for the syntax) to define variables for dex.
         This option can be used to safely include secret keys into the dex configuration.
       '';
@@ -58,7 +58,7 @@ in
       '';
       description = lib.mdDoc ''
         The available options can be found in
-        [the example configuration](https://github.com/dexidp/dex/blob/v${pkgs.dex.version}/config.yaml.dist).
+        [the example configuration](https://github.com/dexidp/dex/blob/v${pkgs.dex-oidc.version}/config.yaml.dist).
 
         It's also possible to refer to environment variables (defined in [services.dex.environmentFile](#opt-services.dex.environmentFile))
         using the syntax `$VARIABLE_NAME`.
@@ -83,11 +83,12 @@ in
         AmbientCapabilities = "CAP_NET_BIND_SERVICE";
         BindReadOnlyPaths = [
           "/nix/store"
-          "-/etc/resolv.conf"
-          "-/etc/nsswitch.conf"
+          "-/etc/dex"
           "-/etc/hosts"
           "-/etc/localtime"
-          "-/etc/dex"
+          "-/etc/nsswitch.conf"
+          "-/etc/resolv.conf"
+          "-/etc/ssl/certs/ca-certificates.crt"
         ];
         BindPaths = optional (cfg.settings.storage.type == "postgres") "/var/run/postgresql";
         CapabilityBoundingSet = "CAP_NET_BIND_SERVICE";
@@ -119,7 +120,7 @@ in
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
         SystemCallArchitectures = "native";
-        SystemCallFilter = [ "@system-service" "~@privileged @resources @setuid @keyring" ];
+        SystemCallFilter = [ "@system-service" "~@privileged @setuid @keyring" ];
         TemporaryFileSystem = "/:ro";
         # Does not work well with the temporary root
         #UMask = "0066";

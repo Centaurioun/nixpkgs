@@ -1,5 +1,4 @@
 { fetchFromGitHub
-, fetchpatch
 , glib
 , gobject-introspection
 , gtk3
@@ -23,25 +22,20 @@
 
 stdenv.mkDerivation rec {
   pname = "xapp";
-  version = "2.2.14";
+  version = "2.6.1";
 
   outputs = [ "out" "dev" ];
-
-  patches = [
-    # Add missing gio-unix-2.0 dependency, can be removed on next update
-    # https://github.com/linuxmint/xapp/pull/156
-    (fetchpatch {
-      url = "https://github.com/linuxmint/xapp/commit/052081f75d1c1212aeb6a913772723c81607bcb3.patch";
-      sha256 = "sha256-VL70Y1FIa7lQ/zKjEx0GhaU1QRu4z6Yu400/bDbgZgM=";
-    })
-  ];
 
   src = fetchFromGitHub {
     owner = "linuxmint";
     repo = pname;
     rev = version;
-    hash = "sha256-BebsS7y/hRQSc4rYOIWJ+sSJ5fLZaCpNAE48JnviUUc=";
+    hash = "sha256-ZxIPiDLcMHEmlnrImctI2ZfH3AIOjB4m/RPGipJ7koM=";
   };
+
+  # Recommended by upstream, which enables the build of xapp-debug.
+  # https://github.com/linuxmint/xapp/issues/169#issuecomment-1574962071
+  mesonBuildType = "debugoptimized";
 
   nativeBuildInputs = [
     meson
@@ -50,10 +44,10 @@ stdenv.mkDerivation rec {
     python3
     vala
     wrapGAppsHook
+    gobject-introspection
   ];
 
   buildInputs = [
-    gobject-introspection
     (python3.withPackages (ps: with ps; [
       pygobject3
       setproctitle # mate applet
@@ -80,20 +74,15 @@ stdenv.mkDerivation rec {
 
   postPatch = ''
     chmod +x schemas/meson_install_schemas.py # patchShebangs requires executable file
-
-    patchShebangs \
-      libxapp/g-codegen.py \
-      meson-scripts/g-codegen.py \
-      schemas/meson_install_schemas.py
+    patchShebangs schemas/meson_install_schemas.py
 
     # Patch pastebin & inxi location
     sed "s|/usr/bin/pastebin|$out/bin/pastebin|" -i scripts/upload-system-info
     sed "s|'inxi'|'${inxi}/bin/inxi'|" -i scripts/upload-system-info
-
-    # Patch gtk3 module target dir
-    substituteInPlace libxapp/meson.build \
-         --replace "gtk3_dep.get_pkgconfig_variable('libdir')" "'$out'"
   '';
+
+  # Fix gtk3 module target dir. Proper upstream solution should be using define_variable.
+  PKG_CONFIG_GTK__3_0_LIBDIR = "${placeholder "out"}/lib";
 
   meta = with lib; {
     homepage = "https://github.com/linuxmint/xapp";

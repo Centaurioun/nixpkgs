@@ -27,6 +27,30 @@ let
     Xft.hintstyle: ${fontconfig.hinting.style}
   '';
 
+  # FIXME: this is an ugly hack.
+  # Some sessions (read: most WMs) don't activate systemd's `graphical-session.target`.
+  # Other sessions (read: most non-WMs) expect `graphical-session.target` to be reached
+  # when the entire session is actually ready. We used to just unconditionally force
+  # `graphical-session.target` to be activated in the session wrapper so things like
+  # xdg-autostart-generator work on sessions that are wrong, but this broke sessions
+  # that do things right. So, preserve this behavior (with some extra steps) by matching
+  # on XDG_CURRENT_DESKTOP and deliberately ignoring sessions we know can do the right thing.
+  fakeSession = action: ''
+      session_is_systemd_aware=$(
+        IFS=:
+        for i in $XDG_CURRENT_DESKTOP; do
+          case $i in
+            KDE|GNOME|X-NIXOS-SYSTEMD-AWARE) echo "1"; exit; ;;
+            *) ;;
+          esac
+        done
+      )
+
+      if [ -z "$session_is_systemd_aware" ]; then
+        /run/current-system/systemd/bin/systemctl --user ${action} nixos-fake-graphical-session.target
+      fi
+  '';
+
   # file provided by services.xserver.displayManager.sessionData.wrapper
   xsessionWrapper = pkgs.writeScript "xsession-wrapper"
     ''
@@ -90,8 +114,7 @@ let
 
       ${cfg.displayManager.sessionCommands}
 
-      # Start systemd user services for graphical sessions
-      /run/current-system/systemd/bin/systemctl --user start graphical-session.target
+      ${fakeSession "start"}
 
       # Allow the user to setup a custom session type.
       if test -x ~/.xsession; then
@@ -153,7 +176,7 @@ in
         internal = true;
         default = "${xorg.xauth}/bin/xauth";
         defaultText = literalExpression ''"''${pkgs.xorg.xauth}/bin/xauth"'';
-        description = "Path to the <command>xauth</command> program used by display managers.";
+        description = lib.mdDoc "Path to the {command}`xauth` program used by display managers.";
       };
 
       xserverBin = mkOption {
@@ -235,15 +258,15 @@ in
               }
             ]
           '';
-        description = ''
+        description = lib.mdDoc ''
           List of sessions supported with the command used to start each
           session.  Each session script can set the
-          <varname>waitPID</varname> shell variable to make this script
+          {var}`waitPID` shell variable to make this script
           wait until the end of the user session.  Each script is used
           to define either a window manager or a desktop manager.  These
           can be differentiated by setting the attribute
-          <varname>manage</varname> either to <literal>"window"</literal>
-          or <literal>"desktop"</literal>.
+          {var}`manage` either to `"window"`
+          or `"desktop"`.
 
           The list of desktop manager and window manager should appear
           inside the display manager with the desktop manager name
@@ -252,7 +275,7 @@ in
       };
 
       sessionData = mkOption {
-        description = "Data exported for display managers’ convenience";
+        description = lib.mdDoc "Data exported for display managers’ convenience";
         internal = true;
         default = {};
         apply = val: {
@@ -299,7 +322,7 @@ in
       importedVariables = mkOption {
         type = types.listOf (types.strMatching "[a-zA-Z_][a-zA-Z0-9_]*");
         visible = false;
-        description = ''
+        description = lib.mdDoc ''
           Environment variables to import into the systemd user environment.
         '';
       };
@@ -417,10 +440,10 @@ in
       "XDG_SESSION_ID"
     ];
 
-    systemd.user.targets.graphical-session = {
+    systemd.user.targets.nixos-fake-graphical-session = {
       unitConfig = {
-        RefuseManualStart = false;
-        StopWhenUnneeded = false;
+        Description = "Fake graphical-session target for non-systemd-aware sessions";
+        BindsTo = "graphical-session.target";
       };
     };
 
@@ -451,7 +474,7 @@ in
 
           test -n "$waitPID" && wait "$waitPID"
 
-          /run/current-system/systemd/bin/systemctl --user stop graphical-session.target
+          ${fakeSession "stop"}
 
           exit 0
         '';

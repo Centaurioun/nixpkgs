@@ -1,35 +1,32 @@
-{ mkDerivation, fetchurl, makeWrapper, unzip, lib, php }:
-let
-  pname = "composer";
-  version = "2.4.1";
-in
-mkDerivation {
-  inherit pname version;
+{ lib, callPackage, fetchFromGitHub, php, unzip, _7zz, xz, git, curl, cacert, makeBinaryWrapper }:
 
-  src = fetchurl {
-    url = "https://getcomposer.org/download/${version}/composer.phar";
-    sha256 = "sha256-6oz2MI7Hb/lkXDgYhBp1iAlrncJ2c0X71L1JLdim3KY=";
+php.buildComposerProject (finalAttrs: {
+  composer = callPackage ../../../build-support/php/pkgs/composer-phar.nix { };
+
+  pname = "composer";
+  version = "2.6.2";
+
+  src = fetchFromGitHub {
+    owner = "composer";
+    repo = "composer";
+    rev = finalAttrs.version;
+    hash = "sha256-tNc0hP41aRk7MmeWXCd73uHxK9pk1tCWyjiSO568qbE=";
   };
 
-  dontUnpack = true;
+  nativeBuildInputs = [ makeBinaryWrapper ];
 
-  nativeBuildInputs = [ makeWrapper ];
-
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/bin
-    install -D $src $out/libexec/composer/composer.phar
-    makeWrapper ${php}/bin/php $out/bin/composer \
-      --add-flags "$out/libexec/composer/composer.phar" \
-      --prefix PATH : ${lib.makeBinPath [ unzip ]}
-    runHook postInstall
+  postInstall = ''
+    wrapProgram $out/bin/composer \
+      --prefix PATH : ${lib.makeBinPath [ _7zz cacert curl git unzip xz ]}
   '';
 
-  meta = with lib; {
+  vendorHash = "sha256-V6C4LxEfXNWH/pCKATv1gf8f6/a0s/xu5j5bNJUNmnA=";
+
+  meta = {
+    changelog = "https://github.com/composer/composer/releases/tag/${finalAttrs.version}";
     description = "Dependency Manager for PHP";
-    license = licenses.mit;
     homepage = "https://getcomposer.org/";
-    changelog = "https://github.com/composer/composer/releases/tag/${version}";
-    maintainers = with maintainers; [ offline ] ++ teams.php.members;
+    license = lib.licenses.mit;
+    maintainers = lib.teams.php.members;
   };
-}
+})

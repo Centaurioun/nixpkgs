@@ -11,7 +11,7 @@ in {
   options = {
 
     services.fstrim = {
-      enable = mkEnableOption "periodic SSD TRIM of mounted partitions in background";
+      enable = mkEnableOption (lib.mdDoc "periodic SSD TRIM of mounted partitions in background");
 
       interval = mkOption {
         type = types.str;
@@ -34,7 +34,7 @@ in {
 
     systemd.timers.fstrim = {
       timerConfig = {
-        OnCalendar = cfg.interval;
+        OnCalendar = [ "" cfg.interval ];
       };
       wantedBy = [ "timers.target" ];
     };

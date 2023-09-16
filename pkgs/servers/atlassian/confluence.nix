@@ -15,11 +15,11 @@ in
 optionalWarning (crowdProperties != null) "Using `crowdProperties` is deprecated!"
 (stdenvNoCC.mkDerivation rec {
   pname = "atlassian-confluence";
-  version = "7.18.1";
+  version = "7.19.12";
 
   src = fetchurl {
     url = "https://product-downloads.atlassian.com/software/confluence/downloads/${pname}-${version}.tar.gz";
-    sha256 = "sha256-MEq1ASnJUYWPvt7Z30+fUTv+QrDI+Xsb5e9K0c8ZtdQ=";
+    sha256 = "sha256-59JOZWKhHPtz9NFiGreFHAOgIL5aB227j6nC1XyofvE=";
   };
 
   buildPhase = ''

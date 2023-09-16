@@ -23,6 +23,7 @@ let
     "pbr"
     "bfd"
     "fabric"
+    "mgmt"
   ];
 
   allServices = services ++ [ "zebra" ];
@@ -51,7 +52,7 @@ let
 
   serviceOptions = service:
     {
-      enable = mkEnableOption "the FRR ${toUpper service} routing protocol";
+      enable = mkEnableOption (lib.mdDoc "the FRR ${toUpper service} routing protocol");
 
       configFile = mkOption {
         type = types.nullOr types.path;

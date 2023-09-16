@@ -11,9 +11,9 @@ in
 {
   options = {
     services.varnish = {
-      enable = mkEnableOption "Varnish Server";
+      enable = mkEnableOption (lib.mdDoc "Varnish Server");
 
-      enableConfigCheck = mkEnableOption "checking the config during build time" // { default = true; };
+      enableConfigCheck = mkEnableOption (lib.mdDoc "checking the config during build time") // { default = true; };
 
       package = mkOption {
         type = types.package;
@@ -99,7 +99,7 @@ in
     environment.systemPackages = [ cfg.package ];
 
     # check .vcl syntax at compile time (e.g. before nixops deployment)
-    system.extraDependencies = mkIf cfg.enableConfigCheck [
+    system.checks = mkIf cfg.enableConfigCheck [
       (pkgs.runCommand "check-varnish-syntax" {} ''
         ${cfg.package}/bin/varnishd -C ${commandLine} 2> $out || (cat $out; exit 1)
       '')

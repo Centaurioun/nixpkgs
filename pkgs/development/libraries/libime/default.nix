@@ -1,4 +1,5 @@
-{ lib, stdenv
+{ lib
+, stdenv
 , fetchurl
 , fetchFromGitHub
 , cmake
@@ -13,26 +14,26 @@ let
     url = "https://download.fcitx-im.org/data/table.tar.gz";
     sha256 = "1dw7mgbaidv3vqy0sh8dbfv8631d2zwv5mlb7npf69a1f8y0b5k1";
   };
-  arpaVer = "20220630";
+  arpaVer = "20230712";
   arpa = fetchurl {
     url = "https://download.fcitx-im.org/data/lm_sc.arpa-${arpaVer}.tar.xz";
-    sha256 = "sha256-jTsPqPoWuT0NRZDwLaBAKcJxNktZJcHJAoRcN0oqAL8=";
+    hash = "sha256-ut1iwWxjc3h6D9qPCc1FLRL2DVhohW9lHO7PGge6ujI=";
   };
-  dictVer = "20220706";
+  dictVer = "20230412";
   dict = fetchurl {
     url = "https://download.fcitx-im.org/data/dict-${dictVer}.tar.xz";
-    sha256 = "sha256-vNeR//eDr7QMHI6S2z+Dc0+Lk8nGriwV4eqHeLkHB3k=";
+    hash = "sha256-8F/Mr/loeQCqw9mtWoGyCIi1cyAUA/vNm7x5B9npdQc=";
   };
 in
 stdenv.mkDerivation rec {
   pname = "libime";
-  version = "unstable-2022-07-11";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "fcitx";
     repo = "libime";
-    rev = "1adb14eb0617ef0eb0f07ad99684f43ca8a4395c";
-    sha256 = "sha256-UldswsnkMuJh2G/EdsFl4CS7Y2RSRAb1hYeWUA2MHPw=";
+    rev = version;
+    sha256 = "sha256-r1Px93Ly7FzcRaPUNTHNcedzHPHocnUj8t8VMZqXkFM=";
     fetchSubmodules = true;
   };
 

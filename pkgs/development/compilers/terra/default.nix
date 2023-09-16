@@ -32,13 +32,13 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "terra";
-  version = "1.0.5";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "terralang";
     repo = "terra";
     rev = "release-${version}";
-    sha256 = "080h718y3r3ca6jlxc985g3dac4q5ysqcalg3h0jl9bxm6rssv50";
+    sha256 = "0v9vpxcp9ybwnfljskqn41vjq7c0srdfv7qs890a6480pnk4kavd";
   };
 
   nativeBuildInputs = [ cmake ];
@@ -50,6 +50,7 @@ in stdenv.mkDerivation rec {
     "-DHAS_TERRA_VERSION=0"
     "-DTERRA_VERSION=${version}"
     "-DTERRA_LUA=luajit"
+    "-DTERRA_SKIP_LUA_DOWNLOAD=ON"
     "-DCLANG_RESOURCE_DIR=${llvmMerged}/lib/clang/${clangVersion}"
   ] ++ lib.optional enableCUDA "-DTERRA_ENABLE_CUDA=ON";
 
@@ -60,9 +61,6 @@ in stdenv.mkDerivation rec {
   patches = [ ./nix-cflags.patch ];
 
   postPatch = ''
-    sed -i '/file(DOWNLOAD "''${LUAJIT_URL}" "''${LUAJIT_TAR}")/d' \
-      cmake/Modules/GetLuaJIT.cmake
-
     substituteInPlace src/terralib.lua \
       --subst-var-by NIX_LIBC_INCLUDE ${lib.getDev stdenv.cc.libc}/include
   '';
@@ -86,8 +84,10 @@ in stdenv.mkDerivation rec {
   meta = with lib; {
     description = "A low-level counterpart to Lua";
     homepage = "https://terralang.org/";
-    platforms = platforms.x86_64 ++ platforms.linux;
+    platforms = platforms.all;
     maintainers = with maintainers; [ jb55 seylerius thoughtpolice elliottslaughter ];
     license = licenses.mit;
+    # never built on aarch64-darwin since first introduction in nixpkgs
+    broken = stdenv.isDarwin && stdenv.isAarch64;
   };
 }

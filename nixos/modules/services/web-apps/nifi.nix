@@ -13,9 +13,7 @@ let
 
   envFile = pkgs.writeText "nifi.env" (lib.concatMapStrings (s: s + "\n") (
     (lib.concatLists (lib.mapAttrsToList (name: value:
-      if value != null then [
-        "${name}=\"${toString value}\""
-      ] else []
+      lib.optional (value != null) ''${name}="${toString value}"''
     ) env))));
 
   nifiEnv = pkgs.writeShellScriptBin "nifi-env" ''
@@ -27,7 +25,7 @@ let
 in {
   options = {
     services.nifi = {
-      enable = lib.mkEnableOption "Apache NiFi";
+      enable = lib.mkEnableOption (lib.mdDoc "Apache NiFi");
 
       package = lib.mkOption {
         type = lib.types.package;

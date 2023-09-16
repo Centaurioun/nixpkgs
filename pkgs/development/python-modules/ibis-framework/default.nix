@@ -1,140 +1,164 @@
 { lib
 , buildPythonPackage
 , fetchFromGitHub
-, fetchpatch
 , pythonOlder
 , pytestCheckHook
 , atpublic
-, click
-, clickhouse-cityhash
-, clickhouse-driver
+, bidict
+, black
+, clickhouse-connect
 , dask
 , datafusion
+, db-dtypes
 , duckdb
 , duckdb-engine
 , filelock
 , geoalchemy2
 , geopandas
+, google-cloud-bigquery
+, google-cloud-bigquery-storage
 , graphviz-nox
-, lz4
+, hypothesis
 , multipledispatch
 , numpy
+, oracledb
 , packaging
 , pandas
 , parsy
 , poetry-core
 , poetry-dynamic-versioning
+, polars
+, pooch
 , psycopg2
 , pyarrow
-, pydantic
+, pydata-google-auth
+, pydruid
 , pymysql
 , pyspark
 , pytest-benchmark
-, pytest-randomly
+, pytest-httpserver
 , pytest-mock
+, pytest-randomly
+, pytest-snapshot
 , pytest-xdist
-, python
+, python-dateutil
 , pytz
 , regex
-, rsync
+, rich
 , shapely
+, snowflake-connector-python
+, snowflake-sqlalchemy
 , sqlalchemy
+, sqlalchemy-views
+, sqlglot
 , sqlite
-, tabulate
 , toolz
+, trino-python-client
+, typing-extensions
 }:
 let
-  testBackends = [
-    "dask"
-    "datafusion"
-    "duckdb"
-    "pandas"
-    "sqlite"
-  ];
+  testBackends = [ "datafusion" "duckdb" "pandas" "sqlite" ];
 
   ibisTestingData = fetchFromGitHub {
+    name = "ibis-testing-data";
     owner = "ibis-project";
     repo = "testing-data";
-    rev = "3c39abfdb4b284140ff481e8f9fbb128b35f157a";
-    sha256 = "sha256-BZWi4kEumZemQeYoAtlUSw922p+R6opSWp/bmX0DjAo=";
+    rev = "2b3968deaa1a28791b2901dbbcc9bfd3d2f23e9b";
+    hash = "sha256-q1b5IcOl5oIFXP7/P5RufncjHEVrWp4NjoU2uo/BE9U=";
   };
 in
 
 buildPythonPackage rec {
   pname = "ibis-framework";
-  version = "3.1.0";
+  version = "6.1.0";
   format = "pyproject";
 
-  disabled = pythonOlder "3.8";
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
+    name = "ibis-source";
     repo = "ibis";
     owner = "ibis-project";
-    rev = version;
-    hash = "sha256-/mQWQLiJa1DRZiyiA6F0/lMyn3wSY1IUwJl2S0IFkvs=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-+AtXgRNxPryP/fd/GQlLNxWbP6ozikqG2yBCp3dE0tY=";
   };
 
-  patches = [
-    (fetchpatch {
-      name = "xfail-datafusion-0.4.0";
-      url = "https://github.com/ibis-project/ibis/compare/c162abba4df24e0d531bd2e6a3be3109c16b43b9...6219d6caee19b6fd3171983c49cd8d6872e3564b.patch";
-      hash = "sha256-pCYPntj+TwzqCtYWRf6JF5/tJC4crSXHp0aepRocHck=";
-      excludes = ["poetry.lock"];
-    })
+  nativeBuildInputs = [
+    poetry-core
+    poetry-dynamic-versioning
   ];
 
-  nativeBuildInputs = [ poetry-core ];
+  POETRY_DYNAMIC_VERSIONING_BYPASS = version;
 
   propagatedBuildInputs = [
     atpublic
+    bidict
+    filelock
     multipledispatch
     numpy
-    packaging
     pandas
     parsy
-    poetry-dynamic-versioning
-    pydantic
+    pooch
+    pyarrow
+    python-dateutil
     pytz
-    regex
-    tabulate
+    rich
+    sqlglot
     toolz
-  ];
+    typing-extensions
+  ]
+  ++ pooch.optional-dependencies.progress
+  ++ pooch.optional-dependencies.xxhash;
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
-    click
-    filelock
+    hypothesis
     pytest-benchmark
+    pytest-httpserver
     pytest-mock
     pytest-randomly
+    pytest-snapshot
     pytest-xdist
-    rsync
   ] ++ lib.concatMap (name: passthru.optional-dependencies.${name}) testBackends;
-
-  preBuild = ''
-    # setup.py exists only for developer convenience and is automatically generated
-    # it gets in the way in nixpkgs so we remove it
-    rm setup.py
-  '';
 
   pytestFlagsArray = [
     "--dist=loadgroup"
     "-m"
     "'${lib.concatStringsSep " or " testBackends} or core'"
-    # this test fails on nixpkgs datafusion version (0.4.0), but works on
-    # datafusion 0.6.0
-    "-k"
-    "'not datafusion-no_op'"
+    # breakage from sqlalchemy2 truediv changes
+    "--deselect=ibis/tests/sql/test_sqlalchemy.py::test_tpc_h17"
+    # tries to download duckdb extensions
+    "--deselect=ibis/backends/duckdb/tests/test_register.py::test_register_sqlite"
+    "--deselect=ibis/backends/duckdb/tests/test_register.py::test_read_sqlite"
+    # pyarrow13 is not supported yet.
+    "--deselect=ibis/backends/tests/test_temporal.py::test_date_truncate"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_interval_add_cast_column"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_temporal.py::test_integer_to_interval_timestamp"
+    "--deselect=ibis/backends/tests/test_timecontext.py::test_context_adjustment_filter_before_window"
+    "--deselect=ibis/backends/tests/test_timecontext.py::test_context_adjustment_window_udf"
+    "--deselect=ibis/backends/tests/test_timecontext.py::test_context_adjustment_window_udf"
+    "--deselect=ibis/backends/tests/test_aggregation.py::test_aggregate_grouped"
   ];
 
-  preCheck = ''
-    set -eo pipefail
+  # patch out tests that check formatting with black
+  postPatch = ''
+    find ibis/tests -type f -name '*.py' -exec sed -i \
+      -e '/^ *assert_decompile_roundtrip/d' \
+      -e 's/^\( *\)code = ibis.decompile(expr, format=True)/\1code = ibis.decompile(expr)/g' {} +
+    substituteInPlace pyproject.toml --replace 'sqlglot = ">=10.4.3,<12"' 'sqlglot = "*"'
+  '';
 
-    export IBIS_TEST_DATA_DIRECTORY
-    IBIS_TEST_DATA_DIRECTORY="$(mktemp -d)"
+  preCheck = ''
+    HOME="$TMPDIR"
+    export IBIS_TEST_DATA_DIRECTORY="ci/ibis-testing-data"
 
     # copy the test data to a directory
-    rsync --chmod=Du+rwx,Fu+rw --archive "${ibisTestingData}/" "$IBIS_TEST_DATA_DIRECTORY"
+    ln -s "${ibisTestingData}" "$IBIS_TEST_DATA_DIRECTORY"
   '';
 
   postCheck = ''
@@ -147,24 +171,33 @@ buildPythonPackage rec {
 
   passthru = {
     optional-dependencies = {
-      clickhouse = [ clickhouse-cityhash clickhouse-driver lz4 ];
-      dask = [ dask pyarrow ];
+      bigquery = [ db-dtypes google-cloud-bigquery google-cloud-bigquery-storage pydata-google-auth ];
+      clickhouse = [ clickhouse-connect sqlalchemy ];
+      dask = [ dask regex ];
       datafusion = [ datafusion ];
-      duckdb = [ duckdb duckdb-engine sqlalchemy ];
+      druid = [ pydruid sqlalchemy ];
+      duckdb = [ duckdb duckdb-engine packaging sqlalchemy sqlalchemy-views ];
+      flink = [ ];
       geospatial = [ geoalchemy2 geopandas shapely ];
-      mysql = [ pymysql sqlalchemy ];
-      pandas = [ ];
-      postgres = [ psycopg2 sqlalchemy ];
-      pyspark = [ pyarrow pyspark ];
-      sqlite = [ sqlalchemy sqlite ];
+      mysql = [ sqlalchemy pymysql sqlalchemy-views ];
+      oracle = [ sqlalchemy oracledb packaging sqlalchemy-views ];
+      pandas = [ regex ];
+      polars = [ polars ];
+      postgres = [ psycopg2 sqlalchemy sqlalchemy-views ];
+      pyspark = [ pyspark sqlalchemy ];
+      snowflake = [ snowflake-connector-python snowflake-sqlalchemy sqlalchemy-views ];
+      sqlite = [ regex sqlalchemy sqlite sqlalchemy-views ];
+      trino = [ trino-python-client sqlalchemy sqlalchemy-views ];
       visualization = [ graphviz-nox ];
+      decompiler = [ black ];
     };
   };
 
   meta = with lib; {
     description = "Productivity-centric Python Big Data Framework";
     homepage = "https://github.com/ibis-project/ibis";
+    changelog = "https://github.com/ibis-project/ibis/blob/${version}/docs/release_notes.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ costrouc cpcloud ];
+    maintainers = with maintainers; [ cpcloud ];
   };
 }

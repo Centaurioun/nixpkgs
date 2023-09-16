@@ -7,13 +7,14 @@
 , pytest-mock
 , pytestCheckHook
 , pythonOlder
+, setuptools
 , websockets
 }:
 
 buildPythonPackage rec {
   pname = "whirlpool-sixth-sense";
-  version = "0.17.1";
-  format = "setuptools";
+  version = "0.18.5";
+  format = "pyproject";
 
   disabled = pythonOlder "3.6";
 
@@ -21,8 +22,12 @@ buildPythonPackage rec {
     owner = "abmantis";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "0b7bqg4h9q9rk3hv2im903xn7jgfyf36kcv31v96ap75yrvip6wa";
+    hash = "sha256-0NJsZex054CWfKX2wyJRd6Cnxa89mNrZN59VqIV2MD8=";
   };
+
+  nativeBuildInputs = [
+    setuptools
+  ];
 
   propagatedBuildInputs = [
     aioconsole
@@ -30,11 +35,14 @@ buildPythonPackage rec {
     websockets
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest-asyncio
     pytest-mock
     pytestCheckHook
   ];
+
+  # https://github.com/abmantis/whirlpool-sixth-sense/issues/15
+  doCheck = false;
 
   pythonImportsCheck = [ "whirlpool" ];
 

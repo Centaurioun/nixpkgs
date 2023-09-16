@@ -17,13 +17,13 @@
 
 stdenv.mkDerivation rec {
   pname = "osdlyrics";
-  version = "0.5.11";
+  version = "0.5.14";
 
   src = fetchFromGitHub {
     owner = "osdlyrics";
     repo = "osdlyrics";
     rev = version;
-    sha256 = "sha256-VxLNaNe4hFwgSW4JEF1T4BWC2NwiOgfwVGiAIOszfGE=";
+    sha256 = "sha256-NVUQLmddXnpryt1AuHSwgPnWkgxWMBNJac09TJ12Yzo=";
   };
 
   nativeBuildInputs = [
@@ -81,7 +81,7 @@ stdenv.mkDerivation rec {
     description = "Standalone lyrics fetcher/displayer";
     homepage = "https://github.com/osdlyrics/osdlyrics";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ jtojnar ];
+    maintainers = with maintainers; [ ];
     platforms = platforms.linux;
   };
 }

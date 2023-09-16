@@ -3,18 +3,18 @@
 with lib;
 
 let
-  cfg  = config.services.ceph;
+  cfg = config.services.ceph;
 
   # function that translates "camelCaseOptions" to "camel case options", credits to tilpner in #nixos@freenode
   expandCamelCase = replaceStrings upperChars (map (s: " ${s}") lowerChars);
   expandCamelCaseAttrs = mapAttrs' (name: value: nameValuePair (expandCamelCase name) value);
 
-  makeServices = (daemonType: daemonIds:
+  makeServices = daemonType: daemonIds:
     mkMerge (map (daemonId:
-      { "ceph-${daemonType}-${daemonId}" = makeService daemonType daemonId cfg.global.clusterName pkgs.ceph; })
-      daemonIds));
+      { "ceph-${daemonType}-${daemonId}" = makeService daemonType daemonId cfg.global.clusterName cfg.${daemonType}.package; })
+      daemonIds);
 
-  makeService = (daemonType: daemonId: clusterName: ceph:
+  makeService = daemonType: daemonId: clusterName: ceph:
     let
       stateDirectory = "ceph/${if daemonType == "rgw" then "radosgw" else daemonType}/${clusterName}-${daemonId}"; in {
     enable = true;
@@ -54,9 +54,9 @@ let
     } // optionalAttrs ( daemonType == "mon") {
       RestartSec = "10";
     };
-  });
+  };
 
-  makeTarget = (daemonType:
+  makeTarget = daemonType:
     {
       "ceph-${daemonType}" = {
         description = "Ceph target allowing to start/stop all ceph-${daemonType} services at once";
@@ -65,14 +65,13 @@ let
         before = [ "ceph.target" ];
         unitConfig.StopWhenUnneeded = true;
       };
-    }
-  );
+    };
 in
 {
   options.services.ceph = {
     # Ceph has a monolithic configuration file but different sections for
     # each daemon, a separate client section and a global section
-    enable = mkEnableOption "Ceph global configuration";
+    enable = mkEnableOption (lib.mdDoc "Ceph global configuration");
 
     global = {
       fsid = mkOption {
@@ -201,7 +200,7 @@ in
     };
 
     mgr = {
-      enable = mkEnableOption "Ceph MGR daemon";
+      enable = mkEnableOption (lib.mdDoc "Ceph MGR daemon");
       daemons = mkOption {
         type = with types; listOf str;
         default = [];
@@ -211,6 +210,7 @@ in
           to the id part in ceph i.e. [ "name1" ] would result in mgr.name1
         '';
       };
+      package = mkPackageOptionMD pkgs "ceph" { };
       extraConfig = mkOption {
         type = with types; attrsOf str;
         default = {};
@@ -221,7 +221,7 @@ in
     };
 
     mon = {
-      enable = mkEnableOption "Ceph MON daemon";
+      enable = mkEnableOption (lib.mdDoc "Ceph MON daemon");
       daemons = mkOption {
         type = with types; listOf str;
         default = [];
@@ -231,6 +231,7 @@ in
           to the id part in ceph i.e. [ "name1" ] would result in mon.name1
         '';
       };
+      package = mkPackageOptionMD pkgs "ceph" { };
       extraConfig = mkOption {
         type = with types; attrsOf str;
         default = {};
@@ -241,7 +242,7 @@ in
     };
 
     osd = {
-      enable = mkEnableOption "Ceph OSD daemon";
+      enable = mkEnableOption (lib.mdDoc "Ceph OSD daemon");
       daemons = mkOption {
         type = with types; listOf str;
         default = [];
@@ -251,7 +252,7 @@ in
           to the id part in ceph i.e. [ "name1" ] would result in osd.name1
         '';
       };
-
+      package = mkPackageOptionMD pkgs "ceph" { };
       extraConfig = mkOption {
         type = with types; attrsOf str;
         default = {
@@ -269,7 +270,7 @@ in
     };
 
     mds = {
-      enable = mkEnableOption "Ceph MDS daemon";
+      enable = mkEnableOption (lib.mdDoc "Ceph MDS daemon");
       daemons = mkOption {
         type = with types; listOf str;
         default = [];
@@ -279,6 +280,7 @@ in
           to the id part in ceph i.e. [ "name1" ] would result in mds.name1
         '';
       };
+      package = mkPackageOptionMD pkgs "ceph" { };
       extraConfig = mkOption {
         type = with types; attrsOf str;
         default = {};
@@ -289,7 +291,8 @@ in
     };
 
     rgw = {
-      enable = mkEnableOption "Ceph RadosGW daemon";
+      enable = mkEnableOption (lib.mdDoc "Ceph RadosGW daemon");
+      package = mkPackageOptionMD pkgs "ceph" { };
       daemons = mkOption {
         type = with types; listOf str;
         default = [];
@@ -304,7 +307,7 @@ in
     };
 
     client = {
-      enable = mkEnableOption "Ceph client configuration";
+      enable = mkEnableOption (lib.mdDoc "Ceph client configuration");
       extraConfig = mkOption {
         type = with types; attrsOf (attrsOf str);
         default = {};
@@ -328,16 +331,16 @@ in
       { assertion = cfg.global.fsid != "";
         message = "fsid has to be set to a valid uuid for the cluster to function";
       }
-      { assertion = cfg.mon.enable == true -> cfg.mon.daemons != [];
+      { assertion = cfg.mon.enable -> cfg.mon.daemons != [];
         message = "have to set id of atleast one MON if you're going to enable Monitor";
       }
-      { assertion = cfg.mds.enable == true -> cfg.mds.daemons != [];
+      { assertion = cfg.mds.enable -> cfg.mds.daemons != [];
         message = "have to set id of atleast one MDS if you're going to enable Metadata Service";
       }
-      { assertion = cfg.osd.enable == true -> cfg.osd.daemons != [];
+      { assertion = cfg.osd.enable -> cfg.osd.daemons != [];
         message = "have to set id of atleast one OSD if you're going to enable OSD";
       }
-      { assertion = cfg.mgr.enable == true -> cfg.mgr.daemons != [];
+      { assertion = cfg.mgr.enable -> cfg.mgr.daemons != [];
         message = "have to set id of atleast one MGR if you're going to enable MGR";
       }
     ];

@@ -1,30 +1,41 @@
 { lib
 , stdenv
 , buildPythonPackage
+, click
+, colorama
+, coverage
 , fetchpatch
 , fetchPypi
 , flit-core
-, click
+, pytest-sugar
+, pytest-xdist
 , pytestCheckHook
+, pythonOlder
 , rich
 , shellingham
-, pytest-xdist
-, pytest-sugar
-, coverage
-, pythonOlder
+, typing-extensions
 }:
 
 buildPythonPackage rec {
   pname = "typer";
-  version = "0.6.1";
+  version = "0.9.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-LVcgpeY/c+rzHtqhX2q4fzXwaQ+MojMBfX0j10OpHXM=";
+    hash = "sha256-UJIv15rqL0dRqOBAj/ENJmK9DIu/qEdVppnzutopeLI=";
   };
+
+  patches = [
+    # https://github.com/tiangolo/typer/pull/651
+    (fetchpatch {
+      name = "unpin-flit-core-dependency.patch";
+      url = "https://github.com/tiangolo/typer/commit/78a0ee2eec9f54ad496420e177fdaad84984def1.patch";
+      hash = "sha256-VVUzFvF2KCXXkCfCU5xu9acT6OLr+PlQQPeVGONtU4A=";
+    })
+  ];
 
   nativeBuildInputs = [
     flit-core
@@ -32,33 +43,46 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [
     click
+    typing-extensions
   ];
 
-  checkInputs = [
-    pytestCheckHook
-    pytest-xdist
-    pytest-sugar
-    shellingham
-    rich
+  passthru.optional-dependencies = {
+    all = [
+      colorama
+      shellingham
+      rich
+    ];
+  };
+
+  nativeCheckInputs = [
     coverage # execs coverage in tests
-  ];
+    pytest-sugar
+    pytest-xdist
+    pytestCheckHook
+  ] ++ passthru.optional-dependencies.all;
 
   preCheck = ''
     export HOME=$(mktemp -d);
   '';
-  disabledTests = lib.optionals stdenv.isDarwin [
-    # likely related to https://github.com/sarugaku/shellingham/issues/35
+
+  disabledTests = [
+    "test_scripts"
+    # Likely related to https://github.com/sarugaku/shellingham/issues/35
+    # fails also on Linux
     "test_show_completion"
     "test_install_completion"
   ] ++ lib.optionals (stdenv.isLinux && stdenv.isAarch64) [
     "test_install_completion"
   ];
 
-  pythonImportsCheck = [ "typer" ];
+  pythonImportsCheck = [
+    "typer"
+  ];
 
   meta = with lib; {
-    description = "Python library for building CLI applications";
+    description = "Library for building CLI applications";
     homepage = "https://typer.tiangolo.com/";
+    changelog = "https://github.com/tiangolo/typer/releases/tag/${version}";
     license = licenses.mit;
     maintainers = with maintainers; [ winpat ];
   };

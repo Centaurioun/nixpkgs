@@ -27,7 +27,7 @@ let
         ${optionalString srv.unlisted "type        = UNLISTED"}
         ${optionalString (srv.flags != "") "flags = ${srv.flags}"}
         socket_type = ${if srv.protocol == "udp" then "dgram" else "stream"}
-        ${if srv.port != 0 then "port        = ${toString srv.port}" else ""}
+        ${optionalString (srv.port != 0) "port        = ${toString srv.port}"}
         wait        = ${if srv.protocol == "udp" then "yes" else "no"}
         user        = ${srv.user}
         server      = ${srv.server}
@@ -44,7 +44,7 @@ in
 
   options = {
 
-    services.xinetd.enable = mkEnableOption "the xinetd super-server daemon";
+    services.xinetd.enable = mkEnableOption (lib.mdDoc "the xinetd super-server daemon");
 
     services.xinetd.extraDefaults = mkOption {
       default = "";
@@ -78,7 +78,7 @@ in
           };
 
           port = mkOption {
-            type = types.int;
+            type = types.port;
             default = 0;
             example = 123;
             description = lib.mdDoc "Port number of the service.";
@@ -105,7 +105,7 @@ in
           flags = mkOption {
             type = types.str;
             default = "";
-            description = "";
+            description = lib.mdDoc "";
           };
 
           unlisted = mkOption {

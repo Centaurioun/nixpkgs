@@ -2,24 +2,27 @@
 , rustPlatform
 , fetchCrate
 , pkg-config
+, curl
 , openssl
 , stdenv
+, darwin
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-public-api";
-  version = "0.15.0";
+  version = "0.32.0";
 
   src = fetchCrate {
     inherit pname version;
-    sha256 = "sha256-3DBpvsjreBJz6NPHJsPV3dK+PvAvdwz7/gp9p/zBieI=";
+    hash = "sha256-etEwMmfwyOTHRb/UfkcHvmnLVVqeSagWJ5HjuJ6gZVo=";
   };
 
-  cargoSha256 = "sha256-sP3oMphy+jbs8NUqyvanWHyDtEoFaUVQHKeTbOLfTH0=";
+  cargoHash = "sha256-7GyPjEit3FEjnegLnZt9TMLBI3BtzcDssrJPj60gpTo=";
 
   nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [ openssl ];
+  buildInputs = [ curl openssl ]
+    ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
   # Tests fail
   doCheck = false;
@@ -27,6 +30,7 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "List and diff the public API of Rust library crates between releases and commits. Detect breaking API changes and semver violations";
     homepage = "https://github.com/Enselic/cargo-public-api";
+    changelog = "https://github.com/Enselic/cargo-public-api/releases/tag/v${version}";
     license = licenses.mit;
     maintainers = with maintainers; [ matthiasbeyer ];
   };

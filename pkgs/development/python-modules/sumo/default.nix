@@ -18,7 +18,7 @@
 
 buildPythonPackage rec {
   pname = "sumo";
-  version = "2.3.3";
+  version = "2.3.6";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
@@ -27,15 +27,8 @@ buildPythonPackage rec {
     owner = "SMTG-UCL";
     repo = "sumo";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-XEs4lLbVwN00UDnDC0kUNlut9RFXPfcyevBA1f1UqSU=";
+    hash = "sha256-HQIs2G2hdKQkQOBs2lijmx/0cI4o/FFJU866PjtrBAE=";
   };
-
-  postPatch = ''
-    # Loosen castepxbin dependency version pinning
-    # https://github.com/SMTG-UCL/sumo/issues/173
-    substituteInPlace setup.py \
-      --replace "castepxbin==0.1.0" "castepxbin>=0.1.0"
-  '';
 
   nativeBuildInputs = [
     cython
@@ -54,7 +47,7 @@ buildPythonPackage rec {
     spglib
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
   ];
 

@@ -4,13 +4,13 @@
 
 stdenv.mkDerivation rec {
   pname = "git-repo";
-  version = "2.29.1";
+  version = "2.36.1";
 
   src = fetchFromGitHub {
     owner = "android";
     repo = "tools_repo";
     rev = "v${version}";
-    sha256 = "sha256-odlvhkgIiNB8fsRfVswiqfpAKLtP9EtcoMxd5SmhX8I=";
+    hash = "sha256-jq9Frh3rufI9Q3auh2Qfoo89x+jKsbxBB8ojreVgmjc=";
   };
 
   # Fix 'NameError: name 'ssl' is not defined'
@@ -41,9 +41,7 @@ stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "gitRepo";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

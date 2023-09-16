@@ -62,7 +62,7 @@ in
 {
   options.services.foundationdb = {
 
-    enable = mkEnableOption "FoundationDB Server";
+    enable = mkEnableOption (lib.mdDoc "FoundationDB Server");
 
     package = mkOption {
       type        = types.package;
@@ -424,6 +424,6 @@ in
     };
   };
 
-  meta.doc         = ./foundationdb.xml;
+  meta.doc         = ./foundationdb.md;
   meta.maintainers = with lib.maintainers; [ thoughtpolice ];
 }

@@ -5,7 +5,7 @@ with lib;
 let
   cfg = config.services.cage;
 in {
-  options.services.cage.enable = mkEnableOption "cage kiosk service";
+  options.services.cage.enable = mkEnableOption (lib.mdDoc "cage kiosk service");
 
   options.services.cage.user = mkOption {
     type = types.str;
@@ -21,6 +21,15 @@ in {
     defaultText = literalExpression "[]";
     description = lib.mdDoc "Additional command line arguments to pass to Cage.";
     example = ["-d"];
+  };
+
+  options.services.cage.environment = mkOption {
+    type = types.attrsOf types.str;
+    default = {};
+    example = {
+      WLR_LIBINPUT_NO_DEVICES = "1";
+    };
+    description = lib.mdDoc "Additional environment variables to pass to Cage.";
   };
 
   options.services.cage.program = mkOption {
@@ -79,6 +88,7 @@ in {
         # Set up a full (custom) user session for the user, required by Cage.
         PAMName = "cage";
       };
+      environment = cfg.environment;
     };
 
     security.polkit.enable = true;

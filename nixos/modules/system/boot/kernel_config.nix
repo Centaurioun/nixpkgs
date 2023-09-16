@@ -14,7 +14,7 @@ let
         default = null;
         internal = true;
         visible = true;
-        description = ''
+        description = lib.mdDoc ''
           Use this field for tristate kernel options expecting a "y" or "m" or "n".
         '';
       };
@@ -70,11 +70,10 @@ let
       let
         val = if item.freeform != null then item.freeform else item.tristate;
       in
-        if val == null
-          then ""
-          else if (item.optional)
+        optionalString (val != null)
+            (if (item.optional)
             then "${key}? ${mkValue val}\n"
-            else "${key} ${mkValue val}\n";
+            else "${key} ${mkValue val}\n");
 
     mkConf = cfg: concatStrings (mapAttrsToList mkConfigLine cfg);
   in mkConf exprs;

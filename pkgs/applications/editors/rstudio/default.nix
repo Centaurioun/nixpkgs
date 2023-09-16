@@ -25,11 +25,12 @@
 , makeWrapper
 , pandoc
 , llvmPackages
-, libyamlcpp
+, yaml-cpp
 , soci
 , postgresql
 , nodejs
 , mkYarnModules
+, fetchYarnDeps
 , qmake
 , server ? false # build server version
 , sqlite
@@ -39,17 +40,17 @@
 
 let
   pname = "RStudio";
-  version = "2022.02.3+492";
+  version = "2022.07.1+554";
   RSTUDIO_VERSION_MAJOR  = "2022";
-  RSTUDIO_VERSION_MINOR  = "02";
-  RSTUDIO_VERSION_PATCH  = "3";
-  RSTUDIO_VERSION_SUFFIX = "+492";
+  RSTUDIO_VERSION_MINOR  = "07";
+  RSTUDIO_VERSION_PATCH  = "1";
+  RSTUDIO_VERSION_SUFFIX = "+554";
 
   src = fetchFromGitHub {
     owner = "rstudio";
     repo = "rstudio";
     rev = "v${version}";
-    sha256 = "1pgbk5rpy47h9ihdrplbfhfc49hrc6242j9099bclq7rqif049wi";
+    sha256 = "0rmdqxizxqg2vgr3lv066cjmlpjrxjlgi0m97wbh6iyhkfm2rrj1";
   };
 
   mathJaxSrc = fetchurl {
@@ -64,11 +65,14 @@ let
     sha256 = "sha256-ULyWdSgGPSAwMt0t4QPuzeUE6Bo6IJh+5BMgW1bFN+Y=";
   };
 
-  panmirrorModules = mkYarnModules {
+  panmirrorModules = mkYarnModules rec {
     inherit pname version;
     packageJSON = ./package.json;
-    yarnLock = ./yarn.lock;
-    yarnNix = ./yarndeps.nix;
+    yarnLock = "${src}/src/gwt/panmirror/src/editor/yarn.lock";
+    offlineCache = fetchYarnDeps {
+      inherit yarnLock;
+      hash = "sha256-v05Up6VMlYlvgUYQVYo+YfpcsMohliNfMgyjq6QymCI=";
+    };
   };
 
   description = "Set of integrated tools for the R language";
@@ -85,7 +89,7 @@ in
       makeWrapper
       pandoc
       nodejs
-    ] ++ lib.optional (!server) [
+    ] ++ lib.optionals (!server) [
       copyDesktopItems
     ];
 
@@ -95,7 +99,7 @@ in
       openssl
       R
       libuuid
-      libyamlcpp
+      yaml-cpp
       soci
       postgresql
     ] ++ (if server then [
@@ -118,7 +122,7 @@ in
       "-DQUARTO_ENABLED=FALSE"
       "-DPANDOC_VERSION=${pandoc.version}"
       "-DCMAKE_INSTALL_PREFIX=${placeholder "out"}/lib/rstudio"
-    ] ++ lib.optional (!server) [
+    ] ++ lib.optionals (!server) [
       "-DQT_QMAKE_EXECUTABLE=${qmake}/bin/qmake"
     ];
 
@@ -129,6 +133,8 @@ in
       ./use-system-node.patch
       ./fix-resources-path.patch
       ./pandoc-nix-path.patch
+      ./remove-quarto-from-generator.patch
+      ./do-not-install-pandoc.patch
     ];
 
     postPatch = ''
@@ -146,6 +152,8 @@ in
 
       substituteInPlace src/cpp/session/include/session/SessionConstants.hpp \
         --replace '@pandoc@' ${pandoc}/bin/pandoc
+
+      sed '1i#include <set>' -i src/cpp/core/include/core/Thread.hpp
     '';
 
     hunspellDictionaries = with lib; filter isDerivation (unique (attrValues hunspellDicts));
@@ -196,7 +204,6 @@ in
       done
 
       rm -r $out/lib/rstudio/{INSTALL,COPYING,NOTICE,README.md,SOURCE,VERSION}
-      rm -r $out/lib/rstudio/bin/{pandoc/pandoc,pandoc}
     '';
 
     meta = with lib; {
@@ -205,7 +212,7 @@ in
       homepage = "https://www.rstudio.com/";
       license = licenses.agpl3Only;
       maintainers = with maintainers; [ ciil cfhammill ];
-      mainProgram = "rstudio" + optionalString server "-server";
+      mainProgram = "rstudio" + lib.optionalString server "-server";
       platforms = platforms.linux;
     };
 

@@ -18,7 +18,7 @@ in
 
     services.pgpkeyserver-lite = {
 
-      enable = mkEnableOption "pgpkeyserver-lite on a nginx vHost proxying to a gpg keyserver";
+      enable = mkEnableOption (lib.mdDoc "pgpkeyserver-lite on a nginx vHost proxying to a gpg keyserver");
 
       package = mkOption {
         default = pkgs.pgpkeyserver-lite;
@@ -41,7 +41,7 @@ in
         defaultText = literalExpression "head config.${sksOpt.hkpAddress}";
         type = types.str;
         description = lib.mdDoc ''
-          Wich ip address the sks-keyserver is listening on.
+          Which IP address the sks-keyserver is listening on.
         '';
       };
 

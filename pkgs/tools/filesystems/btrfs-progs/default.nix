@@ -1,5 +1,5 @@
 { lib, stdenv, fetchurl
-, pkg-config, python3, sphinx
+, pkg-config, sphinx
 , zstd
 , acl, attr, e2fsprogs, libuuid, lzo, udev, zlib
 , runCommand, btrfs-progs
@@ -9,20 +9,20 @@
 
 stdenv.mkDerivation rec {
   pname = "btrfs-progs";
-  version = "5.19";
+  version = "6.5";
 
   src = fetchurl {
     url = "mirror://kernel/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v${version}.tar.xz";
-    sha256 = "sha256-H7zwbksvgOehJ/1oftRiWlt0+mdP4hLINv9w4O38zPk=";
+    sha256 = "sha256-j1B6DN9qizcthi2+SUP+hMZtyyCI48/eLPs7F26sHBw=";
   };
 
   nativeBuildInputs = [
     pkg-config
-    python3 python3.pkgs.setuptools
+  ] ++ [
     sphinx
   ];
 
-  buildInputs = [ acl attr e2fsprogs libuuid lzo python3 udev zlib zstd ];
+  buildInputs = [ acl attr e2fsprogs libuuid lzo udev zlib zstd ];
 
   # gcc bug with -O1 on ARM with gcc 4.8
   # This should be fine on all platforms so apply universally
@@ -32,12 +32,16 @@ stdenv.mkDerivation rec {
     install -v -m 444 -D btrfs-completion $out/share/bash-completion/completions/btrfs
   '';
 
-  configureFlags = lib.optional stdenv.hostPlatform.isMusl "--disable-backtrace"
-    ++ lib.optional (!udevSupport) "--disable-libudev";
+  configureFlags = [
+    # Built separately, see python3Packages.btrfsutil
+    "--disable-python"
+  ] ++ lib.optionals stdenv.hostPlatform.isMusl [
+    "--disable-backtrace"
+  ] ++ lib.optionals (!udevSupport) [
+    "--disable-libudev"
+  ];
 
   makeFlags = [ "udevruledir=$(out)/lib/udev/rules.d" ];
-
-  installFlags = [ "install_python" ];
 
   enableParallelBuilding = true;
 
@@ -52,7 +56,6 @@ stdenv.mkDerivation rec {
   };
 
   passthru.updateScript = gitUpdater {
-    inherit pname version;
     # No nicer place to find latest release.
     url = "https://github.com/kdave/btrfs-progs.git";
     rev-prefix = "v";
@@ -60,7 +63,8 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "Utilities for the btrfs filesystem";
-    homepage = "https://btrfs.wiki.kernel.org/";
+    homepage = "https://btrfs.readthedocs.io/en/latest/";
+    changelog = "https://github.com/kdave/btrfs-progs/raw/v${version}/CHANGES";
     license = licenses.gpl2Only;
     maintainers = with maintainers; [ raskin ];
     platforms = platforms.linux;

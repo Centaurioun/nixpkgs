@@ -1,4 +1,4 @@
-{ config, lib, pkgs, utils, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.virtualisation.containers;
 
@@ -10,20 +10,6 @@ in
   meta = {
     maintainers = [ ] ++ lib.teams.podman.members;
   };
-
-
-  imports = [
-    (
-      lib.mkRemovedOptionModule
-        [ "virtualisation" "containers" "users" ]
-        "All users with `isNormalUser = true` set now get appropriate subuid/subgid mappings."
-    )
-    (
-      lib.mkRemovedOptionModule
-        [ "virtualisation" "containers" "containersConf" "extraConfig" ]
-        "Use virtualisation.containers.containersConf.settings instead."
-    )
-  ];
 
   options.virtualisation.containers = {
 
@@ -150,7 +136,7 @@ in
 
     environment.etc."containers/policy.json".source =
       if cfg.policy != { } then pkgs.writeText "policy.json" (builtins.toJSON cfg.policy)
-      else utils.copyFile "${pkgs.skopeo.src}/default-policy.json";
+      else "${pkgs.skopeo.policy}/default-policy.json";
   };
 
 }

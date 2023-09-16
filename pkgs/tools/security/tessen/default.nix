@@ -7,20 +7,21 @@
 , wl-clipboard
 , pass
 , bemenu
+, scdoc
 }:
 
 stdenvNoCC.mkDerivation rec {
   pname = "tessen";
-  version = "unstable-2022-08-04";
+  version = "2.2.1";
 
   src = fetchFromSourcehut {
     owner = "~ayushnix";
     repo  = pname;
-    rev = "8758a09345f6eef24764de4a0efad737f12562c8";
-    sha256  = "sha256-U6obXpYzIprOJ+b3QiE+eDOq1s0DYiwM55qTga9/8TE=";
+    rev = "v${version}";
+    sha256  = "sha256-8hhYOd5h55kl7ChqdyRzsaxzWLpX41aqG8LfznmbFWw=";
   };
 
-  nativeBuildInputs = [ makeWrapper installShellFiles ];
+  nativeBuildInputs = [ makeWrapper installShellFiles scdoc ];
 
   dontBuild = true;
 
@@ -32,7 +33,9 @@ stdenvNoCC.mkDerivation rec {
   '';
 
   postInstall = ''
-    installManPage man/*
+    scdoc < man/tessen.1.scd > man/tessen.1
+    scdoc < man/tessen.5.scd > man/tessen.5
+    installManPage man/*.{1,5}
     installShellCompletion --cmd tessen \
       --bash completion/tessen.bash-completion \
       --fish completion/tessen.fish-completion

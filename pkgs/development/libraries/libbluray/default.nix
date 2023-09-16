@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, pkg-config, fontconfig, autoreconfHook, DiskArbitration
+{ lib, stdenv, fetchurl, fetchpatch, pkg-config, fontconfig, autoreconfHook, DiskArbitration
 , withJava ? false, jdk, ant
 , withAACS ? false, libaacs
 , withBDplus ? false, libbdplus
@@ -11,16 +11,12 @@
 
 stdenv.mkDerivation rec {
   pname = "libbluray";
-  version = "1.3.2";
+  version = "1.3.4";
 
   src = fetchurl {
     url = "https://get.videolan.org/libbluray/${version}/${pname}-${version}.tar.bz2";
-    sha256 = "sha256-RWgU258Hwe7N736ED8uyCXbvgU34dUKL+4Hs9FhR8XA=";
+    hash = "sha256-R4/9aKD13ejvbKmJt/A1taCiLFmRQuXNP/ewO76+Xys=";
   };
-
-  patches = [
-    ./BDJ-JARFILE-path.patch
-  ];
 
   nativeBuildInputs = [ pkg-config autoreconfHook ]
     ++ lib.optionals withJava [ ant ];

@@ -1,36 +1,40 @@
 { lib
-, stdenv
-, fetchFromGitHub
-, libiconv
 , rustPlatform
-, AppKit
+, fetchFromGitHub
+, stdenv
+, darwin
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "fclones";
-  version = "0.27.1";
+  version = "0.32.1";
 
   src = fetchFromGitHub {
     owner = "pkolaczk";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-wU6iPOQA9rWchj4pOGos0r5QwTAWC9eoYWSRK8W1Gt0=";
+    hash = "sha256-aNTmx94fWuwwlMckjZMOoU1hqSW+yUTKjobvRTxJX4s=";
   };
 
-  cargoSha256 = "sha256-qVnFhES3On0qe0vdii2RMhJu7z6E0udFRD6xQy2+hbk=";
+  cargoHash = "sha256-MGqQImBEH210IVvjyh/aceQr001T1cMHQfyQI1ZyVw8=";
 
   buildInputs = lib.optionals stdenv.isDarwin [
-    AppKit
-    libiconv
+    darwin.apple_sdk_11_0.frameworks.AppKit
   ];
 
   # device::test_physical_device_name test fails on Darwin
   doCheck = !stdenv.isDarwin;
 
+  checkFlags = [
+    # ofborg sometimes fails with "Resource temporarily unavailable"
+    "--skip=cache::test::return_none_if_different_transform_was_used"
+  ];
+
   meta = with lib; {
     description = "Efficient Duplicate File Finder and Remover";
     homepage = "https://github.com/pkolaczk/fclones";
+    changelog = "https://github.com/pkolaczk/fclones/releases/tag/${src.rev}";
     license = licenses.mit;
-    maintainers = with maintainers; [ cyounkins msfjarvis ];
+    maintainers = with maintainers; [ cyounkins figsoda msfjarvis ];
   };
 }

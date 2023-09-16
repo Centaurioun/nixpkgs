@@ -1,15 +1,16 @@
-{ lib, mkDerivation, fetchzip, qtbase, qttools, cmake, sqlite }:
-mkDerivation rec {
+{ stdenv, lib, fetchzip, qtbase, qttools, cmake, sqlite, wrapQtAppsHook }:
+
+stdenv.mkDerivation rec {
   pname = "tagainijisho";
-  version = "1.2.0";
+  version = "1.2.2";
 
   src = fetchzip {
     url = "https://github.com/Gnurou/tagainijisho/releases/download/${version}/tagainijisho-${version}.tar.gz";
-    hash = "sha256-fLq4Wfpa7Wr62KvHztgLiXE8eopCq+wipgabFm2bq6w=";
+    hash = "sha256-CTDMoYGbVE4W0SDerW//aAdUVsySWFQycSy0I3a9+94=";
   };
 
-  nativeBuildInputs = [ cmake ];
-  buildInputs = [ qtbase qttools sqlite ];
+  nativeBuildInputs = [ qttools cmake wrapQtAppsHook ];
+  buildInputs = [ qtbase sqlite ];
 
   cmakeFlags = [
     "-DEMBED_SQLITE=OFF"

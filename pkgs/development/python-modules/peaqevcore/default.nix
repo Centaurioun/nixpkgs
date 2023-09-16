@@ -6,19 +6,18 @@
 
 buildPythonPackage rec {
   pname = "peaqevcore";
-  version = "5.14.0";
+  version = "19.4.2";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-YDdQ/q/QyR9vgY0jteAfQg6A4oCPKjFLySt/g74+eyw=";
+    hash = "sha256-SJ3G301HO0TnrupzhK4K6JPDs25Nltv+lNj1nQB7gV4=";
   };
 
   postPatch = ''
-    substituteInPlace setup.py \
-      --replace "pytest" ""
+    sed -i "/extras_require/d" setup.py
   '';
 
   # Tests are not shipped and source is not tagged
@@ -32,6 +31,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Library for interacting with Peaqev car charging";
     homepage = "https://github.com/elden1337/peaqev-core";
+    changelog = "https://github.com/elden1337/peaqev-core/releases/tag/${version}";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ fab ];
   };

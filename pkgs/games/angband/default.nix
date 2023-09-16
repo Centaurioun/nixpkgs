@@ -4,13 +4,13 @@
 
 stdenv.mkDerivation rec {
   pname = "angband";
-  version = "4.2.4";
+  version = "4.2.5";
 
   src = fetchFromGitHub {
     owner = "angband";
     repo = "angband";
     rev = version;
-    sha256 = "sha256-Fp3BGCZYYdQCKXOLYsT4zzlibNRlbELZi26ofrbGGPQ=";
+    sha256 = "sha256-XH2FUTJJaH5TqV2UD1CKKAXE4CRAb6zfg1UQ79a15k0=";
   };
 
 
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     homepage = "https://angband.github.io/angband";
     description = "A single-player roguelike dungeon exploration game";
-    maintainers = [ ];
+    maintainers = [ maintainers.kenran ];
     license = licenses.gpl2;
   };
 }

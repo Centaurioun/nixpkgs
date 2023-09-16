@@ -15,16 +15,16 @@ let
 in
 buildGoModule rec {
   pname = "minio";
-  version = "2022-08-13T21-54-44Z";
+  version = "2023-08-16T20-17-30Z";
 
   src = fetchFromGitHub {
     owner = "minio";
     repo = "minio";
     rev = "RELEASE.${version}";
-    sha256 = "sha256-+N/IFVyidbu4ns9Pw27D8lxAeSk+KpIIRZOkfxlJQ+Q=";
+    sha256 = "sha256-VY07ITsR2ISM0V4NgwpayDLakU425JCIjxEJ6YKEzXY=";
   };
 
-  vendorSha256 = "sha256-spWmI2an9NW5iMWw7yPDZQ2s0iVjNqnbRY867bBBwAE=";
+  vendorHash = "sha256-KYbfHYls77OH8IWCnO9dSevrJ+2fZmpRQPCKfKCyXME=";
 
   doCheck = false;
 
@@ -45,7 +45,6 @@ buildGoModule rec {
     description = "An S3-compatible object storage server";
     changelog = "https://github.com/minio/minio/releases/tag/RELEASE.${version}";
     maintainers = with maintainers; [ eelco bachp ];
-    platforms = platforms.unix;
     license = licenses.agpl3Plus;
   };
 }

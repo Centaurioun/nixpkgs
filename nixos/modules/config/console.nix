@@ -8,29 +8,20 @@ let
 
   makeColor = i: concatMapStringsSep "," (x: "0x" + substring (2*i) 2 x);
 
-  isUnicode = '' \
-    LOCALE_ARCHIVE=${config.i18n.glibcLocales}/lib/locale/locale-archive \
-    LANG=${config.i18n.defaultLocale} \
-    LC_IDENTIFICATION=${config.i18n.defaultLocale} \
-    locale -k identification-codeset | grep -i UTF-8 \
-  '';
+  isUnicode = hasSuffix "UTF-8" (toUpper config.i18n.defaultLocale);
 
   optimizedKeymap = pkgs.runCommand "keymap" {
-    nativeBuildInputs = with pkgs.buildPackages; [ kbd locale ];
+    nativeBuildInputs = [ pkgs.buildPackages.kbd ];
     LOADKEYS_KEYMAP_PATH = "${consoleEnv pkgs.kbd}/share/keymaps/**";
     preferLocalBuild = true;
   } ''
-    if ${isUnicode} ; then
-      loadkeys -b -u "${cfg.keyMap}" > $out
-    else
-      loadkeys -b "${cfg.keyMap}" > $out
-    fi
+    loadkeys -b ${optionalString isUnicode "-u"} "${cfg.keyMap}" > $out
   '';
 
   # Sadly, systemd-vconsole-setup doesn't support binary keymaps.
   vconsoleConf = pkgs.writeText "vconsole.conf" ''
     KEYMAP=${cfg.keyMap}
-    FONT=${cfg.font}
+    ${optionalString (cfg.font != null) "FONT=${cfg.font}"}
   '';
 
   consoleEnv = kbd: pkgs.buildEnv {
@@ -43,23 +34,30 @@ let
       "/share/unimaps"
     ];
   };
-
-  setVconsole = !config.boot.isContainer;
 in
 
 {
   ###### interface
 
   options.console  = {
+    enable = mkEnableOption (lib.mdDoc "virtual console") // {
+      default = true;
+    };
+
     font = mkOption {
-      type = with types; either str path;
-      default = "Lat2-Terminus16";
+      type = with types; nullOr (either str path);
+      default = null;
       example = "LatArCyrHeb-16";
       description = mdDoc ''
-        The font used for the virtual consoles.  Leave empty to use
-        whatever the {command}`setfont` program considers the
-        default font.
-        Can be either a font name or a path to a PSF font file.
+        The font used for the virtual consoles.
+        Can be `null`, a font name, or a path to a PSF font file.
+
+        Use `null` to let the kernel choose a built-in font.
+        The default is 8x16, and, as of Linux 5.3, Terminus 32 bold for display
+        resolutions of 2560x1080 and higher.
+        These fonts cover the [IBM437][] character set.
+
+        [IBM437]: https://en.wikipedia.org/wiki/Code_page_437
       '';
     };
 
@@ -73,8 +71,8 @@ in
     };
 
     colors = mkOption {
-      type = types.listOf types.str;
-      default = [];
+      type = with types; listOf (strMatching "[[:xdigit:]]{6}");
+      default = [ ];
       example = [
         "002b36" "dc322f" "859900" "b58900"
         "268bd2" "d33682" "2aa198" "eee8d5"
@@ -134,12 +132,18 @@ in
           '');
     }
 
-    (mkIf (!setVconsole) {
-      systemd.services.systemd-vconsole-setup.enable = false;
+    (mkIf (!cfg.enable) {
+      systemd.services = {
+        "serial-getty@ttyS0".enable = false;
+        "serial-getty@hvc0".enable = false;
+        "getty@tty1".enable = false;
+        "autovt@".enable = false;
+        systemd-vconsole-setup.enable = false;
+      };
     })
 
-    (mkIf setVconsole (mkMerge [
-      { environment.systemPackages = with pkgs; [ kbd locale ];
+    (mkIf cfg.enable (mkMerge [
+      { environment.systemPackages = [ pkgs.kbd ];
 
         # Let systemd-vconsole-setup.service do the work of setting up the
         # virtual consoles.
@@ -148,16 +152,11 @@ in
         environment.etc.kbd.source = "${consoleEnv pkgs.kbd}/share";
 
         boot.initrd.preLVMCommands = mkIf (!config.boot.initrd.systemd.enable) (mkBefore ''
-          if ${isUnicode} ; then
-            kbd_mode -u -C /dev/console
-            printf "\033%%G" >> /dev/console
-          else
-            kbd_mode -a -C /dev/console
-            printf "\033%%@" >> /dev/console
-          fi
+          kbd_mode ${if isUnicode then "-u" else "-a"} -C /dev/console
+          printf "\033%%${if isUnicode then "G" else "@"}" >> /dev/console
           loadkmap < ${optimizedKeymap}
 
-          ${optionalString cfg.earlySetup ''
+          ${optionalString (cfg.earlySetup && cfg.font != null) ''
             setfont -C /dev/console $extraUtils/share/consolefonts/font.psf
           ''}
         '');
@@ -174,7 +173,7 @@ in
           "${config.boot.initrd.systemd.package.kbd}/bin/setfont"
           "${config.boot.initrd.systemd.package.kbd}/bin/loadkeys"
           "${config.boot.initrd.systemd.package.kbd.gzip}/bin/gzip" # Fonts and keyboard layouts are compressed
-        ] ++ optionals (hasPrefix builtins.storeDir cfg.font) [
+        ] ++ optionals (cfg.font != null && hasPrefix builtins.storeDir cfg.font) [
           "${cfg.font}"
         ] ++ optionals (hasPrefix builtins.storeDir cfg.keyMap) [
           "${cfg.keyMap}"
@@ -201,7 +200,7 @@ in
         ];
       })
 
-      (mkIf (cfg.earlySetup && !config.boot.initrd.systemd.enable) {
+      (mkIf (cfg.earlySetup && cfg.font != null && !config.boot.initrd.systemd.enable) {
         boot.initrd.extraUtilsCommands = ''
           mkdir -p $out/share/consolefonts
           ${if substring 0 1 cfg.font == "/" then ''

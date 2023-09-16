@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , fetchFromGitHub
+, fetchYarnDeps
 , fetchzip
 , makeWrapper
 , makeDesktopItem
@@ -14,23 +15,26 @@ let
 in
   mkYarnPackage rec {
     pname = "micropad";
-    version = "3.30.6";
+    version = "4.3.0";
 
     src = fetchFromGitHub {
       owner = "MicroPad";
       repo = "Micropad-Electron";
       rev = "v${version}";
-      sha256 = "sha256-v3hnHG6FMW2xBU/DnenqjFizQv/OZ9cW99n/3SoENe8=";
+      hash = "sha256-Rr3mOz2OlCq2tibxutR8zBANhswnkz70aP9BBS/pXp0=";
     };
 
     micropad-core = fetchzip {
       url = "https://github.com/MicroPad/MicroPad-Core/releases/download/v${version}/micropad.tar.xz";
-      hash = "sha256-aqshYbVrQg6tYtTlO91FGiH7DuueOA0OU5KGCVc7XvI=";
+      hash = "sha256-7yFTD8bXsxT6kBKxBGGxwzYpa0rZYLYV6KRYtImQ58c=";
     };
 
     packageJSON = ./package.json;
-    yarnLock = ./yarn.lock;
-    yarnNix = ./yarn.nix;
+
+    offlineCache = fetchYarnDeps {
+      yarnLock = "${src}/yarn.lock";
+      hash = "sha256-PKCi1c8WY1BG/H1kUJ8xSCVoLF/9DEn5Kh29is2BTYY=";
+    };
 
     nativeBuildInputs = [ copyDesktopItems makeWrapper ]
       ++ lib.optionals stdenv.isDarwin [ desktopToDarwinBundle ];
@@ -62,7 +66,7 @@ in
       # executable wrapper
       makeWrapper '${electron}/bin/electron' "$out/bin/${executableName}" \
         --add-flags "$out/share/micropad" \
-        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--enable-features=UseOzonePlatform --ozone-platform=wayland}}"
+        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
 
       runHook postInstall
     '';
@@ -83,6 +87,8 @@ in
         categories = ["Office"];
       })
     ];
+
+    passthru.updateScript = ./update.sh;
 
     meta = with lib; {
       description = "A powerful note-taking app that helps you organise + take notes without restrictions";

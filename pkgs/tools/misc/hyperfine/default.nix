@@ -1,6 +1,6 @@
 { lib
 , rustPlatform
-, fetchCrate
+, fetchFromGitHub
 , installShellFiles
 , stdenv
 , Security
@@ -8,14 +8,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "hyperfine";
-  version = "1.14.0";
+  version = "1.17.0";
 
-  src = fetchCrate {
-    inherit pname version;
-    sha256 = "sha256-3DDgh/0iD1LJEPjicLtHcs9PMso/Wv+3vlkWfdJlpIM=";
+  src = fetchFromGitHub {
+    owner = "sharkdp";
+    repo = "hyperfine";
+    rev = "v${version}";
+    hash = "sha256-IUjOklkEiy/U2HjjMt1X1uSpIkTAYOPiPQ+70xvvxKA=";
   };
 
-  cargoSha256 = "sha256-VkB6KJUi5PACpjrK/OJ5tmroJJVnDxhZAQzSWkrtuCU=";
+  cargoHash = "sha256-VjkcQueBODEADHdWOts2f3Zjar43hi0UXzVhvkK4o8I=";
 
   nativeBuildInputs = [ installShellFiles ];
   buildInputs = lib.optional stdenv.isDarwin Security;

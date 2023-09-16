@@ -9,7 +9,7 @@ in
 {
   options = {
     services.xserver.windowManager.herbstluftwm = {
-      enable = mkEnableOption "herbstluftwm";
+      enable = mkEnableOption (lib.mdDoc "herbstluftwm");
 
       package = mkOption {
         type = types.package;
@@ -40,7 +40,7 @@ in
             (cfg.configFile != null)
             ''-c "${cfg.configFile}"''
             ;
-        in "${cfg.package}/bin/herbstluftwm ${configFileClause}";
+        in "${cfg.package}/bin/herbstluftwm ${configFileClause} &";
     };
     environment.systemPackages = [ cfg.package ];
   };

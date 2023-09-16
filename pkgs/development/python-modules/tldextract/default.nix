@@ -9,22 +9,24 @@
 , requests
 , requests-file
 , responses
+, setuptools
 , setuptools-scm
 }:
 
 buildPythonPackage rec {
   pname   = "tldextract";
-  version = "3.3.1";
-  format = "setuptools";
+  version = "3.5.0";
+  format = "pyproject";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-/hWsMgXlolthaJNp+Yy0XHd4qPKvET18EVWezlGV8tY=";
+    hash = "sha256-TfHGW5W+YdWUKOhhHpVeVObx1Eg9Po1XM9OpBiFV6RA=";
   };
 
   nativeBuildInputs = [
+    setuptools
     setuptools-scm
   ];
 
@@ -35,7 +37,7 @@ buildPythonPackage rec {
     requests-file
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest-mock
     pytestCheckHook
     responses

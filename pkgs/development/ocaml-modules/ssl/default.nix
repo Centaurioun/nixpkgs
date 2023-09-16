@@ -10,20 +10,22 @@
 
 buildDunePackage rec {
   pname = "ssl";
-  version = "0.5.11";
+  version = "0.7.0";
+
+  duneVersion = "3";
 
   src = fetchFromGitHub {
     owner = "savonet";
     repo = "ocaml-ssl";
-    rev = version;
-    sha256 = "sha256-uFr+XSKDGMHaM2o5DODYmt7+LkhnDzzlVX//CtAXBm4=";
+    rev = "v${version}";
+    hash = "sha256-gi80iwlKaI4TdAVnCyPG03qRWFa19DHdTrA0KMFBAc4=";
   };
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ dune-configurator ];
   propagatedBuildInputs = [ openssl ];
 
-  doCheck = lib.versionAtLeast ocaml.version "4.06";
+  doCheck = lib.versionAtLeast ocaml.version "4.08";
   checkInputs = [ alcotest ];
   preCheck = ''
     mkdir -p _build/default/tests/
