@@ -1,0 +1,48 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - eslint > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - lint-staged > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - eslint > inquirer > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - eslint > table > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - lint-staged > yup > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > eslint > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/generator > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > eslint > inquirer > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > eslint > table > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > prettier-eslint > eslint > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > prettier-eslint > vue-eslint-parser > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/generator > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/helper-function-name > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/helper-split-export-declaration > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > prettier-eslint > eslint > inquirer > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - prettier-eslint-cli > prettier-eslint > eslint > table > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/helper-function-name > @babel/helper-get-function-arity > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
+    - babel-eslint > @babel/traverse > @babel/helper-function-name > @babel/template > @babel/types > lodash:
+        patched: '2023-03-16T18:22:23.838Z'
