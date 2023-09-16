@@ -15,22 +15,21 @@
 , pytestCheckHook
 , pytest-asyncio
 , aiosqlite
-, sqlalchemy
 , asyncpg
 }:
 
 buildPythonPackage rec {
   pname = "mautrix";
-  version = "0.19.4";
+  version = "0.20.2";
   format = "setuptools";
 
-  disabled = pythonOlder "3.8";
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "mautrix";
     repo = "python";
-    rev = "v${version}";
-    hash = "sha256-zPcqM+Ge7K4pJD4K0MkkGdSiYvXxe0K1qbfHzVYmGx0=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-c6NSDFQGKtT8Otw+ivNUZ2+Qm/LEDGpZNs3FrYq+N1A=";
   };
 
   propagatedBuildInputs = [
@@ -57,11 +56,8 @@ buildPythonPackage rec {
   checkInputs = [
     pytest-asyncio
     aiosqlite
-    sqlalchemy
     asyncpg
   ] ++ passthru.optional-dependencies.encryption;
-
-  SQLALCHEMY_SILENCE_UBER_WARNING = 1;
 
   pythonImportsCheck = [
     "mautrix"

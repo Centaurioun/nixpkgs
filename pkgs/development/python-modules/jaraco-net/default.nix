@@ -11,11 +11,11 @@
 , keyring
 , requests
 , feedparser
-, jaraco_text
-, jaraco_logging
+, jaraco-text
+, jaraco-logging
 , jaraco-email
-, jaraco_functools
-, jaraco_collections
+, jaraco-functools
+, jaraco-collections
 , path
 , python-dateutil
 , pathvalidate
@@ -24,12 +24,14 @@
 , pytestCheckHook
 , cherrypy
 , importlib-resources
+, pyparsing
 , requests-mock
+, nettools
 }:
 
 buildPythonPackage rec {
   pname = "jaraco-net";
-  version = "9.3.0";
+  version = "9.3.1";
 
   disabled = pythonOlder "3.7";
 
@@ -39,7 +41,7 @@ buildPythonPackage rec {
     owner = "jaraco";
     repo = "jaraco.net";
     rev = "refs/tags/v${version}";
-    hash = "sha256-Ks8e3xPjIWgSO0PSpjMYftxAuDt3ilogoDFuJqfN74o=";
+    hash = "sha256-aq5v4QlapmMTrqwNA0GtRi/xZCcyoR1giZECBsYwymw=";
   };
 
   nativeBuildInputs = [
@@ -56,11 +58,11 @@ buildPythonPackage rec {
     keyring
     requests
     feedparser
-    jaraco_text
-    jaraco_logging
+    jaraco-text
+    jaraco-logging
     jaraco-email
-    jaraco_functools
-    jaraco_collections
+    jaraco-functools
+    jaraco-collections
     path
     python-dateutil
     pathvalidate
@@ -75,7 +77,10 @@ buildPythonPackage rec {
     pytestCheckHook
     cherrypy
     importlib-resources
+    pyparsing
     requests-mock
+  ] ++ lib.optionals stdenv.isDarwin [
+    nettools
   ];
 
   disabledTestPaths = [
@@ -86,6 +91,9 @@ buildPythonPackage rec {
     "jaraco/net/scanner.py"
     "tests/test_cookies.py"
   ];
+
+  # cherrypy does not support Python 3.11
+  doCheck = pythonOlder "3.11";
 
   meta = {
     changelog = "https://github.com/jaraco/jaraco.net/blob/${src.rev}/CHANGES.rst";

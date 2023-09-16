@@ -1,38 +1,52 @@
 { lib, fetchFromGitHub, cacert, openssl, nixosTests
-, python310, fetchpatch
+, python310, fetchPypi, fetchpatch
 }:
 
 let
-  dropDevOutput = { outputs, ... }: {
+  dropDocOutput = { outputs, ... }: {
     outputs = lib.filter (x: x != "doc") outputs;
   };
 
+  # Follow issue below for Python 3.11 support
+  # https://github.com/privacyidea/privacyidea/issues/3593
   python3' = python310.override {
     packageOverrides = self: super: {
+      django = super.django_3;
+
       sqlalchemy = super.sqlalchemy.overridePythonAttrs (oldAttrs: rec {
         version = "1.3.24";
-        src = oldAttrs.src.override {
+        src = fetchPypi {
+          inherit (oldAttrs) pname;
           inherit version;
           hash = "sha256-67t3fL+TEjWbiXv4G6ANrg9ctp+6KhgmXcwYpvXvdRk=";
         };
         doCheck = false;
       });
+      # version 3.3.0+ does not support SQLAlchemy 1.3
+      factory_boy = super.factory_boy.overridePythonAttrs (oldAttrs: rec {
+        version = "3.2.1";
+        src = oldAttrs.src.override {
+          inherit version;
+          hash = "sha256-qY0newwEfHXrbkq4UIp/gfsD0sshmG9ieRNUbveipV4=";
+        };
+        postPatch = "";
+      });
       # fails with `no tests ran in 1.75s`
       alembic = super.alembic.overridePythonAttrs (lib.const {
         doCheck = false;
       });
-      flask_migrate = super.flask_migrate.overridePythonAttrs (oldAttrs: rec {
+      flask-migrate = super.flask-migrate.overridePythonAttrs (oldAttrs: rec {
         version = "2.7.0";
-        src = self.fetchPypi {
+        src = fetchPypi {
           pname = "Flask-Migrate";
           inherit version;
-          sha256 = "ae2f05671588762dd83a21d8b18c51fe355e86783e24594995ff8d7380dffe38";
+          hash = "sha256-ri8FZxWIdi3YOiHYsYxR/jVehng+JFlJlf+Nc4Df/jg=";
         };
       });
       flask-sqlalchemy = super.flask-sqlalchemy.overridePythonAttrs (old: rec {
         version = "2.5.1";
         format = "setuptools";
-        src = self.fetchPypi {
+        src = fetchPypi {
           pname = "Flask-SQLAlchemy";
           inherit version;
           hash = "sha256:2bda44b43e7cacb15d4e05ff3cc1f8bc97936cc464623424102bfc2c35e95912";
@@ -43,7 +57,7 @@ let
         version = "1.0.1";
         src = old.src.override {
           inherit version;
-          sha256 = "6c80b1e5ad3665290ea39320b91e1be1e0d5f60652b964a3070216de83d2e47c";
+          hash = "sha256-bICx5a02ZSkOo5MguR4b4eDV9gZSuWSjBwIW3oPS5Hw=";
         };
         nativeCheckInputs = old.nativeCheckInputs ++ (with self; [
           requests
@@ -55,18 +69,18 @@ let
         version = "2.11.3";
         src = old.src.override {
           inherit version;
-          sha256 = "sha256-ptWEM94K6AA0fKsfowQ867q+i6qdKeZo8cdoy4ejM8Y=";
+          hash = "sha256-ptWEM94K6AA0fKsfowQ867q+i6qdKeZo8cdoy4ejM8Y=";
         };
         patches = [
           # python 3.10 compat fixes. In later upstream releases, but these
           # are not compatible with flask 1 which we need here :(
           (fetchpatch {
             url = "https://github.com/thmo/jinja/commit/1efb4cc918b4f3d097c376596da101de9f76585a.patch";
-            sha256 = "sha256-GFaSvYxgzOEFmnnDIfcf0ImScNTh1lR4lxt2Uz1DYdU=";
+            hash = "sha256-GFaSvYxgzOEFmnnDIfcf0ImScNTh1lR4lxt2Uz1DYdU=";
           })
           (fetchpatch {
             url = "https://github.com/mkrizek/jinja/commit/bd8bad37d1c0e2d8995a44fd88e234f5340afec5.patch";
-            sha256 = "sha256-Uow+gaO+/dH6zavC0X/SsuMAfhTLRWpamVlL87DXDRA=";
+            hash = "sha256-Uow+gaO+/dH6zavC0X/SsuMAfhTLRWpamVlL87DXDRA=";
             excludes = [ "CHANGES.rst" ];
           })
         ];
@@ -76,21 +90,21 @@ let
         version = "2.0.1";
         src = old.src.override {
           inherit version;
-          sha256 = "sha256-WUxngH+xYjizDES99082wCzfItHIzake+KDtjav1Ygo=";
+          hash = "sha256-WUxngH+xYjizDES99082wCzfItHIzake+KDtjav1Ygo=";
         };
       });
       itsdangerous = super.itsdangerous.overridePythonAttrs (old: rec {
         version = "1.1.0";
         src = old.src.override {
           inherit version;
-          sha256 = "321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19";
+          hash = "sha256-MhsDPQfypBNtPsdi6snxahDM1g9TwMka+QIXrOe6Hxk=";
         };
       });
       flask = super.flask.overridePythonAttrs (old: rec {
         version = "1.1.4";
         src = old.src.override {
           inherit version;
-          sha256 = "0fbeb6180d383a9186d0d6ed954e0042ad9f18e0e8de088b2b419d526927d196";
+          hash = "sha256-D762GA04OpGG0NbtlU4AQq2fGODo3giLK0GdUmkn0ZY=";
         };
       });
       sqlsoup = super.sqlsoup.overrideAttrs ({ meta ? {}, ... }: {
@@ -100,13 +114,14 @@ let
         version = "7.1.2";
         src = old.src.override {
           inherit version;
-          sha256 = "d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a";
+          hash = "sha256-0rUlXHxjSbwb0eWeCM0SrLvWPOZJ8liHVXg6qU37axo=";
         };
+        disabledTests = [ "test_bytes_args" ]; # https://github.com/pallets/click/commit/6e05e1fa1c2804
       });
       # Now requires `lingua` as check input that requires a newer `click`,
       # however `click-7` is needed by the older flask we need here. Since it's just
       # for the test-suite apparently, let's skip it for now.
-      Mako = super.Mako.overridePythonAttrs (lib.const {
+      mako = super.mako.overridePythonAttrs (lib.const {
         nativeCheckInputs = [];
         doCheck = false;
       });
@@ -118,35 +133,40 @@ let
       flask-babel = (super.flask-babel.override {
         sphinxHook = null;
         furo = null;
-      }).overridePythonAttrs (old: (dropDevOutput old) // rec {
+      }).overridePythonAttrs (old: (dropDocOutput old) // rec {
         pname = "Flask-Babel";
         version = "2.0.0";
         format = "setuptools";
-        src = self.fetchPypi {
+        src = fetchPypi {
           inherit pname;
           inherit version;
           hash = "sha256:f9faf45cdb2e1a32ea2ec14403587d4295108f35017a7821a2b1acb8cfd9257d";
         };
+        disabledTests = [
+          # AssertionError: assert 'Apr 12, 2010...46:00\u202fPM' == 'Apr 12, 2010, 1:46:00 PM'
+          # Note the `\u202f` (narrow, no-break space) vs space.
+          "test_basics"
+          "test_init_app"
+          "test_custom_locale_selector"
+          "test_refreshing"
+        ];
       });
       psycopg2 = (super.psycopg2.override {
         sphinxHook = null;
         sphinx-better-theme = null;
-      }).overridePythonAttrs dropDevOutput;
-      hypothesis = super.hypothesis.override {
-        enableDocumentation = false;
-      };
+      }).overridePythonAttrs dropDocOutput;
       pyjwt = (super.pyjwt.override {
         sphinxHook = null;
         sphinx-rtd-theme = null;
-      }).overridePythonAttrs (old: (dropDevOutput old) // { format = "setuptools"; });
+      }).overridePythonAttrs (old: (dropDocOutput old) // { format = "setuptools"; });
       beautifulsoup4 = (super.beautifulsoup4.override {
         sphinxHook = null;
-      }).overridePythonAttrs dropDevOutput;
+      }).overridePythonAttrs dropDocOutput;
       pydash = (super.pydash.override {
         sphinx-rtd-theme = null;
       }).overridePythonAttrs (old: rec {
         version = "5.1.0";
-        src = self.fetchPypi {
+        src = fetchPypi {
           inherit (old) pname;
           inherit version;
           hash = "sha256-GysFCsG64EnNB/WSCxT6u+UmOPSF2a2h6xFanuv/aDU=";
@@ -154,24 +174,44 @@ let
         format = "setuptools";
         doCheck = false;
       });
+      pyopenssl = (super.pyopenssl.override {
+        sphinxHook = null;
+        sphinx-rtd-theme = null;
+      }).overridePythonAttrs dropDocOutput;
+      deprecated = (super.deprecated.override {
+        sphinxHook = null;
+      }).overridePythonAttrs dropDocOutput;
+      wrapt = (super.wrapt.override {
+        sphinxHook = null;
+        sphinx-rtd-theme = null;
+      }).overridePythonAttrs dropDocOutput;
     };
   };
 in
 python3'.pkgs.buildPythonPackage rec {
   pname = "privacyIDEA";
   version = "3.8.1";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-SYXw8PBCb514v3rcy15W/vZS5JyMsu81D2sJmviLRtw=";
+    hash = "sha256-SYXw8PBCb514v3rcy15W/vZS5JyMsu81D2sJmviLRtw=";
     fetchSubmodules = true;
   };
 
+  patches = [
+    # https://github.com/privacyidea/privacyidea/pull/3611
+    (fetchpatch {
+      url = "https://github.com/privacyidea/privacyidea/commit/7db6509721726a34e8528437ddbd4210019b11ef.patch";
+      sha256 = "sha256-ZvtauCs1vWyxzGbA0B2+gG8q5JyUO8DF8nm/3/vcYmE=";
+    })
+  ];
+
   propagatedBuildInputs = with python3'.pkgs; [
-    cryptography pyrad pymysql python-dateutil flask-versioned flask_script
-    defusedxml croniter flask_migrate pyjwt configobj sqlsoup pillow
+    cryptography pyrad pymysql python-dateutil flask-versioned flask-script
+    defusedxml croniter flask-migrate pyjwt configobj sqlsoup pillow
     python-gnupg passlib pyopenssl beautifulsoup4 smpplib flask-babel
     ldap3 huey pyyaml qrcode oauth2client requests lxml cbor2 psycopg2
     pydash ecdsa google-auth importlib-metadata argon2-cffi bcrypt segno
@@ -218,5 +258,6 @@ python3'.pkgs.buildPythonPackage rec {
     license = licenses.agpl3Plus;
     homepage = "http://www.privacyidea.org";
     maintainers = with maintainers; [ globin ma27 ];
+    platforms = platforms.linux;
   };
 }

@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "minio-client";
-  version = "2023-02-16T19-20-11Z";
+  version = "2023-09-07T22-48-55Z";
 
   src = fetchFromGitHub {
     owner = "minio";
     repo = "mc";
     rev = "RELEASE.${version}";
-    sha256 = "sha256-UL49sZ8dBiXexmWt8rAUn2b2d58KJ8/5FyoojO7Y/68=";
+    sha256 = "sha256-DW6G37SLYzXkh8EHXhczloIZxNQS2+ON2kXe5VsQSZg=";
   };
 
-  vendorHash = "sha256-CdMpzYmJxOu4HvsQMJDZxRr7MWB4xN6ivEWldIptVnU=";
+  vendorHash = "sha256-NbqqvV34Bzv2AmMYlN133RI7jNh96Jmo8065D3RxClI=";
 
   subPackages = [ "." ];
 
@@ -33,7 +33,6 @@ buildGoModule rec {
     description = "A replacement for ls, cp, mkdir, diff and rsync commands for filesystems and object storage";
     maintainers = with maintainers; [ bachp eelco ];
     mainProgram = "mc";
-    platforms = platforms.unix;
     license = licenses.asl20;
   };
 }

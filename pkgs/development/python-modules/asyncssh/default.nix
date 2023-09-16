@@ -1,5 +1,5 @@
-{ stdenv
-, lib
+{ lib
+, stdenv
 , bcrypt
 , buildPythonPackage
 , cryptography
@@ -20,34 +20,51 @@
 
 buildPythonPackage rec {
   pname = "asyncssh";
-  version = "2.13.1";
+  version = "2.13.2";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-67uDwFwLRc8jDeHvLwYFnjYPmvpcPd9g/JL697lP+Ic=";
+    hash = "sha256-mR5THEu32+xit1SHjZajJGM4qsEaKM48PpkBj7L1gow=";
   };
 
   propagatedBuildInputs = [
-    bcrypt
     cryptography
-    fido2
-    gssapi
-    libnacl
     libsodium
     nettle
-    pyopenssl
-    python-pkcs11
     typing-extensions
   ];
+
+  passthru.optional-dependencies = {
+    bcrypt = [
+      bcrypt
+    ];
+    fido2 = [
+      fido2
+    ];
+    gssapi = [
+      gssapi
+    ];
+    libnacl = [
+      libnacl
+    ];
+    pkcs11 = [
+      python-pkcs11
+    ];
+    pyOpenSSL = [
+      pyopenssl
+    ];
+  };
+
+  __darwinAllowLocalNetworking = true;
 
   nativeCheckInputs = [
     openssh
     openssl
     pytestCheckHook
-  ];
+  ] ++ lib.flatten (builtins.attrValues passthru.optional-dependencies);
 
   patches = [
     # Reverts https://github.com/ronf/asyncssh/commit/4b3dec994b3aa821dba4db507030b569c3a32730

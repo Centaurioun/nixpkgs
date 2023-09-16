@@ -5,8 +5,8 @@ mkDiscoursePlugin {
   src = fetchFromGitHub {
     owner = "discourse";
     repo = "discourse-reactions";
-    rev = "aba16d53d15ceca9ae18595ae85defbd10fe0256";
-    sha256 = "sha256-mGyMQGNa5Q2hMQkdIsa1JArA6cqSK+FmGSDJFZxS/go=";
+    rev = "643f807a3a2195f08211064301f0350d9f51604f";
+    sha256 = "sha256-4FdiYUNysSuOJ664G3YvlUHx/J7MLUS3kVBdXT47oEw=";
   };
   meta = with lib; {
     homepage = "https://github.com/discourse/discourse-reactions";

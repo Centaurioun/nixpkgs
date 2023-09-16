@@ -8,7 +8,7 @@
 
 buildPythonPackage rec {
   pname = "simplejson";
-  version = "3.18.1";
+  version = "3.19.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -17,7 +17,7 @@ buildPythonPackage rec {
     owner = pname;
     repo = pname;
     rev = "refs/tags/v${version}";
-    hash = "sha256-m5V1wmqkPxZBH25vWajztwa3HF4KtH+HXXs4TCecTm8=";
+    hash = "sha256-LUD0Eoj7fDGiR0yhIZOto6kn7Ud0TXyDTO1UTbRMJiQ=";
   };
 
   nativeCheckInputs = [

@@ -2,22 +2,21 @@
 
 buildGoModule rec {
   pname = "acorn";
-  version = "0.5.1";
+  version = "0.8.0";
 
   src = fetchFromGitHub {
     owner = "acorn-io";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-9+jI3GBRuX06+aN8C8C3K72kKtQVwmfAwhYLViuERxk=";
+    hash = "sha256-ZS3YxXgMSu8+eRnpqrtaBTQIlSY3cscudcTbztiRsbM=";
   };
 
-  vendorHash = "sha256-t/q94B+ihcHh/XFHs1Z9yQTwoFKv/nkhIDykymGNA2w=";
+  vendorHash = "sha256-jkkzlMc2y8HvPZjpmRIQz64JK5yjhdoJevE0dclBHvA=";
 
   ldflags = [
     "-s"
     "-w"
     "-X github.com/acorn-io/acorn/pkg/version.Tag=v${version}"
-    "-X github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault=https://alpha-dns.acrn.io/v1"
   ];
 
   # integration tests require network and kubernetes master

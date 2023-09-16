@@ -8,7 +8,7 @@ buildPythonPackage rec {
     owner = "appknox";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-NtAsO/I1jDEv676yhAgLguQnB/kHdAqPoLt2QFWbvmw=";
+    hash = "sha256-NtAsO/I1jDEv676yhAgLguQnB/kHdAqPoLt2QFWbvmw=";
   };
 
   propagatedBuildInputs = [ asn1crypto click lxml ];
@@ -20,6 +20,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/appknox/pyaxmlparser";
     # Files from Androguard are licensed ASL 2.0
     license = with licenses; [ mit asl20 ];
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

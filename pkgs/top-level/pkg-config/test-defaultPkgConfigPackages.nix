@@ -4,7 +4,8 @@
 let
   inherit (lib.strings) escapeNixIdentifier;
 
-  allTests = lib.mapAttrs (k: v: if v == null then null else makePkgConfigTestMaybe k v) defaultPkgConfigPackages;
+  allTests = lib.mapAttrs (k: v: if v == null then null else makePkgConfigTestMaybe k v)
+    (builtins.removeAttrs defaultPkgConfigPackages ["recurseForDerivations"]);
 
   # nix-build rejects attribute names with periods
   # This will build those regardless.
@@ -39,7 +40,7 @@ let
     else if pkg.meta.broken
     then null
 
-    else testers.hasPkgConfigModule { inherit moduleName; package = pkg; };
+    else testers.hasPkgConfigModules { moduleNames = [ moduleName ]; package = pkg; };
 
 in
   lib.recurseIntoAttrs allTests // { inherit tests-combined; }

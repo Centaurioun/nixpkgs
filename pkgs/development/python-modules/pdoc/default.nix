@@ -1,5 +1,4 @@
 { lib
-, stdenv
 , buildPythonPackage
 , pythonOlder
 , fetchFromGitHub
@@ -14,17 +13,16 @@
 
 buildPythonPackage rec {
   pname = "pdoc";
-  version = "12.3.1";
-  disabled = pythonOlder "3.7";
+  version = "14.0.0";
+  disabled = pythonOlder "3.8";
 
   format = "pyproject";
 
-  # the Pypi version does not include tests
   src = fetchFromGitHub {
     owner = "mitmproxy";
     repo = "pdoc";
     rev = "v${version}";
-    sha256 = "sha256-SaLrE/eHxKnlm6BZYbcZZrbrUZMeHJ4eCcqMsFvyZ7I=";
+    hash = "sha256-rMHp0diXvWIOyucuTAXO/IOljKhDYOZKtkih5+rUJCM=";
   };
 
   nativeBuildInputs = [
@@ -41,15 +39,17 @@ buildPythonPackage rec {
     pytestCheckHook
     hypothesis
   ];
-  disabledTests = [
-    # Failing "test_snapshots" parametrization: Output does not match the stored snapshot
-    # This test seems to be sensitive to ordering of dictionary items and the version of dependencies.
-    # the only difference between the stored snapshot and the produced documentation is a debug javascript comment
-    "html-demopackage_dir"
+  disabledTestPaths = [
+    # "test_snapshots" tries to match generated output against stored snapshots,
+    # which are highly sensitive to dep versions.
+    "test/test_snapshot.py"
   ];
+
   pytestFlagsArray = [
-    ''-m "not slow"'' # skip tests marked slow
+    ''-m "not slow"'' # skip slow tests
   ];
+
+  __darwinAllowLocalNetworking = true;
 
   pythonImportsCheck = [ "pdoc" ];
 

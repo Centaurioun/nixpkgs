@@ -1,6 +1,6 @@
-{ lib, stdenv
+{ lib
+, stdenv
 , fetchFromGitLab
-, fetchpatch
 , nix-update-script
 
 , autoreconfHook
@@ -12,7 +12,7 @@
 , xz
 , zlib
 
-# for passthru.tests
+  # for passthru.tests
 , libgeotiff
 , python3Packages
 , imagemagick
@@ -24,13 +24,13 @@
 
 stdenv.mkDerivation rec {
   pname = "libtiff";
-  version = "4.5.0";
+  version = "4.5.1";
 
   src = fetchFromGitLab {
     owner = "libtiff";
     repo = "libtiff";
     rev = "v${version}";
-    hash = "sha256-KG6rB940JMjFUTAgtkzg+Zh75gylPY6Q7/4gEbL0Hcs=";
+    hash = "sha256-qQEthy6YhNAQmdDMyoCIvK8f3Tx25MgqhJZW74CB93E=";
   };
 
   patches = [
@@ -39,11 +39,6 @@ stdenv.mkDerivation rec {
     # libc++abi 11 has an `#include <version>`, this picks up files name
     # `version` in the project's include paths
     ./rename-version.patch
-    (fetchpatch {
-      name = "CVE-2022-48281.patch";
-      url = "https://gitlab.com/libtiff/libtiff/-/commit/d1b6b9c1b3cae2d9e37754506c1ad8f4f7b646b5.diff";
-      sha256 = "sha256-FWUlyJyHXac6fuM5f9PG33kcF5Bm4fyFmYnaDal46iM=";
-    })
   ];
 
   postPatch = ''
@@ -63,9 +58,13 @@ stdenv.mkDerivation rec {
   # sure cross-compilation works first!
   nativeBuildInputs = [ autoreconfHook pkg-config sphinx ];
 
-  propagatedBuildInputs = [ libjpeg xz zlib ]; #TODO: opengl support (bogus configure detection)
-
-  buildInputs = [ libdeflate ];
+  # TODO: opengl support (bogus configure detection)
+  propagatedBuildInputs = [
+    libdeflate
+    libjpeg
+    xz
+    zlib
+  ];
 
   enableParallelBuilding = true;
 

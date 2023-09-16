@@ -8,6 +8,7 @@
 , fetchurl
 , flex
 , gnutls
+, installShellFiles
 , libuuid
 , meson-tools
 , ncurses
@@ -15,6 +16,7 @@
 , swig
 , which
 , armTrustedFirmwareAllwinner
+, armTrustedFirmwareAllwinnerH6
 , armTrustedFirmwareAllwinnerH616
 , armTrustedFirmwareRK3328
 , armTrustedFirmwareRK3399
@@ -23,10 +25,10 @@
 }:
 
 let
-  defaultVersion = "2022.10";
+  defaultVersion = "2023.07.02";
   defaultSrc = fetchurl {
-    url = "ftp://ftp.denx.de/pub/u-boot/u-boot-${defaultVersion}.tar.bz2";
-    hash = "sha256-ULRIKlBbwoG6hHDDmaPCbhReKbI1ALw1xQ3r1/pGvfg=";
+    url = "https://ftp.denx.de/pub/u-boot/u-boot-${defaultVersion}.tar.bz2";
+    hash = "sha256-a2pIWBwUq7D5W9h8GvTXQJIkBte4AQAqn5Ryf93gIdU=";
   };
   buildUBoot = lib.makeOverridable ({
     version ? null
@@ -47,11 +49,6 @@ let
 
     patches = [
       ./0001-configs-rpi-allow-for-bigger-kernels.patch
-
-      # Make U-Boot forward some important settings from the firmware-provided FDT. Fixes booting on BCM2711C0 boards.
-      # See also: https://github.com/NixOS/nixpkgs/issues/135828
-      # Source: https://patchwork.ozlabs.org/project/uboot/patch/20210822143656.289891-1-sjoerd@collabora.com/
-      ./0001-rpi-Copy-properties-from-firmware-dtb-to-the-loaded-.patch
     ] ++ extraPatches;
 
     postPatch = ''
@@ -65,10 +62,12 @@ let
       bison
       dtc
       flex
+      installShellFiles
       openssl
       (buildPackages.python3.withPackages (p: [
         p.libfdt
         p.setuptools # for pkg_resources
+        p.pyelftools
       ]))
       swig
       which # for scripts/dtc-version.sh
@@ -135,6 +134,12 @@ in {
     dontStrip = false;
     extraMeta.platforms = lib.platforms.linux;
     extraMakeFlags = [ "HOST_TOOLS_ALL=y" "CROSS_BUILD_TOOLS=1" "NO_SDL=1" "tools" ];
+
+    outputs = [ "out" "man" ];
+
+    postInstall = ''
+      installManPage doc/*.1
+    '';
     filesToInstall = [
       "tools/dumpimage"
       "tools/fdtgrep"
@@ -365,6 +370,13 @@ in {
     filesToInstall = ["u-boot-sunxi-with-spl.bin"];
   };
 
+  ubootOrangePi3 = buildUBoot {
+    defconfig = "orangepi_3_defconfig";
+    extraMeta.platforms = ["aarch64-linux"];
+    BL31 = "${armTrustedFirmwareAllwinnerH6}/bl31.bin";
+    filesToInstall = ["u-boot-sunxi-with-spl.bin"];
+  };
+
   ubootPcduino3Nano = buildUBoot {
     defconfig = "Linksprite_pcDuino3_Nano_defconfig";
     extraMeta.platforms = ["armv7l-linux"];
@@ -413,13 +425,6 @@ in {
 
   ubootQemuRiscv64Smode = buildUBoot {
     defconfig = "qemu-riscv64_smode_defconfig";
-    extraPatches = [
-      # https://patchwork.ozlabs.org/project/uboot/patch/20220128134713.2322800-1-alexandre.ghiti@canonical.com/
-      (fetchpatch {
-        url = "https://patchwork.ozlabs.org/series/283391/mbox/";
-        sha256 = "sha256-V0jDpx6O4bFzuaOQejdrRnLiWb5LBTx47T0TZqNtMXk=";
-      })
-    ];
     extraMeta.platforms = ["riscv64-linux"];
     filesToInstall = ["u-boot.bin"];
   };
@@ -486,7 +491,6 @@ in {
       sha256 = "0h7xm4ck3p3380c6bqm5ixrkxwcx6z5vysqdwvfa7gcqx5d6x5zz";
     };
   in buildUBoot {
-    extraMakeFlags = [ "all" "u-boot.itb" ];
     defconfig = "rock64-rk3328_defconfig";
     extraMeta = {
       platforms = [ "aarch64-linux" ];
@@ -508,7 +512,6 @@ in {
   };
 
   ubootRockPro64 = buildUBoot {
-    extraMakeFlags = [ "all" "u-boot.itb" ];
     extraPatches = [
       # https://patchwork.ozlabs.org/project/uboot/list/?series=237654&archive=both&state=*
       (fetchpatch {

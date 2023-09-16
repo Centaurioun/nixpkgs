@@ -18,7 +18,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-qDrKCPvnqst5/seIycC6yTY0NWDtnsGLgqE6EsKNKrs=";
+    hash = "sha256-qDrKCPvnqst5/seIycC6yTY0NWDtnsGLgqE6EsKNKrs=";
   };
 
   patches = [
@@ -54,6 +54,6 @@ buildPythonPackage rec {
     description = "HTTP/2 State-Machine based protocol implementation";
     homepage = "https://github.com/python-hyper/h2";
     license = licenses.mit;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

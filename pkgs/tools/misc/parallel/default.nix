@@ -1,18 +1,23 @@
-{ fetchurl, lib, stdenv, perl, makeWrapper, procps, coreutils }:
+{ fetchurl, lib, stdenv, perl, makeWrapper, procps, coreutils, buildPackages }:
 
 stdenv.mkDerivation rec {
   pname = "parallel";
-  version = "20221222";
+  version = "20230822";
 
   src = fetchurl {
     url = "mirror://gnu/parallel/${pname}-${version}.tar.bz2";
-    sha256 = "sha256-TakMe+wYqUQxtOPbSd1WP2XPIM6v0kX3zHtC74v4WX8=";
+    sha256 = "sha256-S1lFmaPBE8KVLWsMG3zlRGAJjqIVrF9oUSAfme5r/F4=";
   };
 
   outputs = [ "out" "man" "doc" ];
 
   nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ perl procps ];
+
+  postPatch = lib.optionalString (!stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    substituteInPlace Makefile.in \
+      --replace '$(DESTDIR)$(bindir)/parallel --shell-completion' '${lib.getExe buildPackages.parallel} --shell-completion'
+  '';
 
   preInstall = ''
     patchShebangs ./src/parallel
@@ -48,5 +53,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl3Plus;
     platforms = platforms.all;
     maintainers = with maintainers; [ pSub vrthra tomberek ];
+    mainProgram = "parallel";
   };
 }

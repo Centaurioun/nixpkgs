@@ -11,7 +11,7 @@
 
 buildPythonPackage rec {
   pname = "platformdirs";
-  version = "2.6.2";
+  version = "3.9.1";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
@@ -20,7 +20,7 @@ buildPythonPackage rec {
     owner = pname;
     repo = pname;
     rev = "refs/tags/${version}";
-    hash = "sha256-yGpDAwn8Kt6vF2K2zbAs8+fowhYQmvsm/87WJofuhME=";
+    hash = "sha256-gBiXdnBWp0SlpE6TQPONTXEsQ2XFGCANGdNM/gv7V5s=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;

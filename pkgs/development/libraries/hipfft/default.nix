@@ -20,7 +20,7 @@
 # Can also use cuFFT
 stdenv.mkDerivation (finalAttrs: {
   pname = "hipfft";
-  version = "5.4.2";
+  version = "5.4.3";
 
   outputs = [
     "out"
@@ -85,7 +85,7 @@ stdenv.mkDerivation (finalAttrs: {
   '' + lib.optionalString buildSamples ''
     mkdir -p $sample/bin
     mv clients/staging/hipfft_* $sample/bin
-    patchelf $sample/bin/hipfft_* --shrink-rpath --allowed-rpath-prefixes /nix/store
+    patchelf $sample/bin/hipfft_* --shrink-rpath --allowed-rpath-prefixes "$NIX_STORE"
   '' + lib.optionalString (buildTests || buildBenchmarks) ''
     rmdir $out/bin
   '';
