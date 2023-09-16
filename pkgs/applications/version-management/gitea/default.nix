@@ -5,22 +5,27 @@
 , makeWrapper
 , git
 , bash
+, coreutils
+, gitea
 , gzip
 , openssh
 , pam
 , sqliteSupport ? true
 , pamSupport ? true
+, runCommand
+, brotli
+, xorg
 , nixosTests
 }:
 
 buildGoModule rec {
   pname = "gitea";
-  version = "1.18.5";
+  version = "1.20.4";
 
   # not fetching directly from the git repo, because that lacks several vendor files for the web UI
   src = fetchurl {
-    url = "https://dl.gitea.io/gitea/${version}/gitea-src-${version}.tar.gz";
-    hash = "sha256-OGPn4fknYfzmuAi6CL8m/Ih4uRNraVDmpBm20qT3lKk=";
+    url = "https://dl.gitea.com/gitea/${version}/gitea-src-${version}.tar.gz";
+    hash = "sha256-96LI7/4FZy17KED2xc4UFyW4e47DZMuSnMw7loYYB8c=";
   };
 
   vendorHash = null;
@@ -30,7 +35,7 @@ buildGoModule rec {
   ];
 
   postPatch = ''
-    substituteInPlace modules/setting/setting.go --subst-var data
+    substituteInPlace modules/setting/server.go --subst-var data
   '';
 
   subPackages = [ "." ];
@@ -58,10 +63,24 @@ buildGoModule rec {
     cp -R ./options/locale $out/locale
 
     wrapProgram $out/bin/gitea \
-      --prefix PATH : ${lib.makeBinPath [ bash git gzip openssh ]}
+      --prefix PATH : ${lib.makeBinPath [ bash coreutils git gzip openssh ]}
   '';
 
-  passthru.tests = nixosTests.gitea;
+  passthru = {
+    data-compressed = runCommand "gitea-data-compressed" {
+      nativeBuildInputs = [ brotli xorg.lndir ];
+    } ''
+      mkdir $out
+      lndir ${gitea.data}/ $out/
+
+      # Create static gzip and brotli files
+      find -L $out -type f -regextype posix-extended -iregex '.*\.(css|html|js|svg|ttf|txt)' \
+        -exec gzip --best --keep --force {} ';' \
+        -exec brotli --best --keep --no-copy-stat {} ';'
+    '';
+
+    tests = nixosTests.gitea;
+  };
 
   meta = with lib; {
     description = "Git with a cup of tea";
@@ -69,5 +88,6 @@ buildGoModule rec {
     license = licenses.mit;
     maintainers = with maintainers; [ disassembler kolaente ma27 techknowlogick ];
     broken = stdenv.isDarwin;
+    mainProgram = "gitea";
   };
 }

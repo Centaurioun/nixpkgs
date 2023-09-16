@@ -3,17 +3,18 @@
 , fetchFromGitHub
 , nix-update-script
 , nixosTests
-, php}:
+, php
+}:
 
 stdenvNoCC.mkDerivation rec {
-  name = "cloudlog";
-  version = "2.4";
+  pname = "cloudlog";
+  version = "2.4.8";
 
   src = fetchFromGitHub {
     owner = "magicbug";
     repo = "Cloudlog";
     rev = version;
-    sha256 = "sha256-aF1f6EmlcUgZOkHJgrW6P923QW56vWMH8CZ4cnYiiSk=";
+    sha256 = "sha256-LY8kTZooBzwrrruCjwdiNhxjrmIDV4N2HcfhbSSe6o4=";
   };
 
   postPath = ''
@@ -34,11 +35,7 @@ stdenvNoCC.mkDerivation rec {
   };
 
   meta = with lib; {
-    description = ''
-      Web based amateur radio logging application built using PHP & MySQL
-      supports general station logging tasks from HF to Microwave with
-      supporting applications to support CAT control.
-    '';
+    description = "Web based amateur radio logging application built using PHP & MySQL";
     license = licenses.mit;
     homepage = "https://www.magicbug.co.uk/cloudlog";
     platforms = php.meta.platforms;

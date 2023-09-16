@@ -3,24 +3,34 @@
 , fetchFromGitHub
 , poetry-core
 , home-assistant
+, python
 }:
 
 buildPythonPackage rec {
   pname = "homeassistant-stubs";
-  version = "2023.2.5";
+  version = "2023.9.2";
   format = "pyproject";
+
+  disabled = python.version != home-assistant.python.version;
 
   src = fetchFromGitHub {
     owner = "KapJI";
     repo = "homeassistant-stubs";
     rev = "refs/tags/${version}";
-    hash = "sha256-MQYk4DWvmqtPl00L1c00JclKkTZe9EYMrm/LucUHBE0=";
+    hash = "sha256-cKBf7S6ZvLlRp0L23mDu1CvG7d1d34LaIev60JPD0TE=";
   };
 
   nativeBuildInputs = [
     poetry-core
     home-assistant
   ];
+
+  postPatch = ''
+    # Relax constraint to year and month
+    substituteInPlace pyproject.toml --replace \
+      'homeassistant = "${version}"' \
+      'homeassistant = "~${lib.versions.majorMinor home-assistant.version}"'
+  '';
 
   pythonImportsCheck = [
     "homeassistant-stubs"

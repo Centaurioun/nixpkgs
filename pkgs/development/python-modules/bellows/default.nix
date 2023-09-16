@@ -1,5 +1,4 @@
 { lib
-, asynctest
 , buildPythonPackage
 , click
 , click-log
@@ -16,16 +15,16 @@
 
 buildPythonPackage rec {
   pname = "bellows";
-  version = "0.34.9";
+  version = "0.36.3";
   format = "setuptools";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "zigpy";
     repo = "bellows";
     rev = "refs/tags/${version}";
-    hash = "sha256-2QTY6mZkhaXHeZcLKxW7BkzOj2jYJx1v4TKG5YBcSC0=";
+    hash = "sha256-5s2I24gvHRXHm7ZTNZxc6ge9Kbe6UObcY29SvbIUWJg=";
   };
 
   propagatedBuildInputs = [
@@ -41,8 +40,6 @@ buildPythonPackage rec {
     pytestCheckHook
     pytest-asyncio
     pytest-timeout
-  ]  ++ lib.optionals (pythonOlder "3.8") [
-    asynctest
   ];
 
   pythonImportsCheck = [

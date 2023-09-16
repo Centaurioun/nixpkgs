@@ -2,14 +2,13 @@
 
 buildNimPackage rec {
   pname = "cbor";
-  version = "20221007";
+  version = "20230619";
   src = fetchFromSourcehut {
     owner = "~ehmry";
     repo = "nim_${pname}";
     rev = version;
-    hash = "sha256-zFkYsXFRAiBrfz3VNML3l+rYrdJmczl0bfZcJSbHHbM=";
+    hash = "sha256-F6T/5bUwrJyhRarTWO9cjbf7UfEOXPNWu6mfVKNZsQA=";
   };
-  doCheck = true;
   meta = with lib;
     src.meta // {
       description =

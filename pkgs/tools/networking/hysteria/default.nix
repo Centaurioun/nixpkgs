@@ -4,16 +4,16 @@
 }:
 buildGoModule rec {
   pname = "hysteria";
-  version = "1.3.3";
+  version = "2.0.0";
 
   src = fetchFromGitHub {
-    owner = "HyNetwork";
+    owner = "apernet";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-CQgCFtvQDvhHTk10gpxfAvEJLz/i+CXXyzGrxi26hBk=";
+    rev = "e11762a196e4fcdbde728ef160bc3c6cfeb5bc6e";
+    hash = "sha256-9Fo/qKcoZg8OYH4cok18rweA1PAFULOCJGTdUB8fbAU=";
   };
 
-  vendorSha256 = "sha256-sN+2XYoC+dDs6QKxwxuBCW4dOf4elSNKdOrbMxjOtSY=";
+  vendorHash = "sha256-7un8oi6pKYiJGw6mbG35crndLg35y7VkoAnQKMJduh4=";
   proxyVendor = true;
 
   ldflags = [
@@ -23,7 +23,7 @@ buildGoModule rec {
   ];
 
   postInstall = ''
-    mv $out/bin/cmd $out/bin/hysteria
+    mv $out/bin/app $out/bin/hysteria
   '';
 
   # Network required
@@ -31,7 +31,7 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "A feature-packed proxy & relay utility optimized for lossy, unstable connections";
-    homepage = "https://github.com/HyNetwork/hysteria";
+    homepage = "https://github.com/apernet/hysteria";
     license = licenses.mit;
     platforms = platforms.linux;
     maintainers = with maintainers; [ oluceps ];

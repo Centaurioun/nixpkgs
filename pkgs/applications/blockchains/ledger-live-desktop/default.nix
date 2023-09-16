@@ -2,12 +2,13 @@
 
 let
   pname = "ledger-live-desktop";
-  version = "2.53.2";
+  version = "2.66.0";
 
   src = fetchurl {
     url = "https://download.live.ledger.com/${pname}-${version}-linux-x86_64.AppImage";
-    hash = "sha256-RGeJWUMZagXM/8SHHOpTpcnsz+BShnGp2yvt31qo5lI=";
+    hash = "sha256-Du2bvtlNjxtkJ31RCKZmGtWxOEIjohbmEC5o3VvFGlY=";
   };
+
 
   appimageContents = appimageTools.extractType2 {
     inherit pname version src;
@@ -27,10 +28,10 @@ appimageTools.wrapType2 rec {
   '';
 
   meta = with lib; {
-    description = "Wallet app for Ledger Nano S and Ledger Blue";
-    homepage = "https://www.ledger.com/live";
+    description = "App for Ledger hardware wallets";
+    homepage = "https://www.ledger.com/ledger-live/";
     license = licenses.mit;
-    maintainers = with maintainers; [ andresilva thedavidmeister nyanloutre RaghavSood th0rgal WeebSorceress ];
+    maintainers = with maintainers; [ andresilva thedavidmeister nyanloutre RaghavSood th0rgal ];
     platforms = [ "x86_64-linux" ];
   };
 }

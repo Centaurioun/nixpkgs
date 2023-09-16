@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "clusterctl";
-  version = "1.3.4";
+  version = "1.5.1";
 
   src = fetchFromGitHub {
     owner = "kubernetes-sigs";
     repo = "cluster-api";
     rev = "v${version}";
-    hash = "sha256-bkjtJidG+UHma15axlLcXtqtWTqesOdHHmH4db5hoAY=";
+    hash = "sha256-yzk2zIk3igi7xlOi8RlGsthxy/M051SsiLi2v0gMWYk=";
   };
 
-  vendorHash = "sha256-VPeaT4vPhBa6V+Ir+vNRIWgyVBzEgTDSnDtGrxxdZ0c=";
+  vendorHash = "sha256-FUimSBMZI4BDtNKnlzmxe2HiL7MGIUh7SFC2dwWYT3I=";
 
   subPackages = [ "cmd/clusterctl" ];
 
@@ -43,6 +43,6 @@ buildGoModule rec {
     description = "Kubernetes cluster API tool";
     homepage = "https://cluster-api.sigs.k8s.io/";
     license = licenses.asl20;
-    maintainers = with maintainers; [ zowoq ];
+    maintainers = with maintainers; [ qjoly ];
   };
 }

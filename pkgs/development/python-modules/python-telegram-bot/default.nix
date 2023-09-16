@@ -1,6 +1,6 @@
 { lib
 , aiolimiter
-, APScheduler
+, apscheduler
 , beautifulsoup4
 , buildPythonPackage
 , cachetools
@@ -14,31 +14,40 @@
 , pytestCheckHook
 , pythonOlder
 , pytz
+, setuptools
+, wheel
 , tornado
 }:
 
 buildPythonPackage rec {
   pname = "python-telegram-bot";
-  version = "20.0";
-  format = "setuptools";
+  version = "20.5";
+  format = "pyproject";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "refs/tags/v${version}";
-    hash = "sha256-34Apzy7id+fDxTN935hPT0HeZNZMEdQqZ0aiV0trAxE=";
+    hash = "sha256-/AdGpOl87EeVDCAZLjtan7ttE2vUL0gi1qeM18ilYEQ=";
   };
+
+  nativeBuildInputs = [
+    setuptools
+    wheel
+  ];
 
   propagatedBuildInputs = [
     aiolimiter
-    APScheduler
+    apscheduler
     cachetools
     cryptography
     httpx
     pytz
-  ] ++ httpx.optional-dependencies.socks;
+  ]
+  ++ httpx.optional-dependencies.socks
+  ++ httpx.optional-dependencies.http2;
 
   nativeCheckInputs = [
     beautifulsoup4

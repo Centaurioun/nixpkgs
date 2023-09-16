@@ -1,4 +1,8 @@
-{ stdenv, lib, fetchFromGitHub, autoreconfHook, pkg-config
+{ stdenv
+, lib
+, fetchFromGitHub
+, autoreconfHook
+, pkg-config
 , openssl
 , ppp
 , systemd
@@ -8,13 +12,13 @@
 
 stdenv.mkDerivation rec {
   pname = "openfortivpn";
-  version = "1.19.0";
+  version = "1.20.5";
 
   src = fetchFromGitHub {
     owner = "adrienverge";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-HwKkgRS3Hccym78T+suFkIP5nmQDWRAwm0l/PaS1p7o=";
+    hash = "sha256-jbgxhCQWDw1ZUOAeLhOG+b6JYgvpr5TnNDIO/4k+e7k=";
   };
 
   # we cannot write the config file to /etc and as we don't need the file, so drop it

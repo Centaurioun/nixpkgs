@@ -15,8 +15,10 @@ mkDerivationWith python3Packages.buildPythonApplication rec {
     hash = "sha256-4VC1fwQh9L3c5tgLUaC36p9QHL4dR2vkWc2XlNl0Xzw=";
   };
 
-  # Disable version check
   postPatch = ''
+    # Drop broken version specifier
+    sed -i '/python_requires/d' setup.py
+    # Disable version check
     substituteInPlace raphodo/constants.py \
       --replace "disable_version_check = False" "disable_version_check = True"
   '';
@@ -24,6 +26,7 @@ mkDerivationWith python3Packages.buildPythonApplication rec {
   nativeBuildInputs = [
     file
     intltool
+    gobject-introspection
   ];
 
   # Package has no generally usable unit tests.
@@ -35,13 +38,9 @@ mkDerivationWith python3Packages.buildPythonApplication rec {
     $out/bin/rapid-photo-downloader --detailed-version
   '';
 
-  # NOTE: Without gobject-introspection in buildInputs and strictDeps = false,
-  #       launching fails with:
-  #       "Namespace [Notify / GExiv2 / GUdev] not available"
   buildInputs = [
     gdk-pixbuf
     gexiv2
-    gobject-introspection
     gst_all_1.gst-libav
     gst_all_1.gst-plugins-base
     gst_all_1.gst-plugins-good
@@ -52,6 +51,10 @@ mkDerivationWith python3Packages.buildPythonApplication rec {
     udisks
   ];
 
+  # NOTE: Check if strictDeps can be renabled
+  # at the time of writing this the dependency easygui fails to build
+  #       launching fails with:
+  #       "Namespace [Notify / GExiv2 / GUdev] not available"
   strictDeps = false;
 
   propagatedBuildInputs = with python3Packages; [

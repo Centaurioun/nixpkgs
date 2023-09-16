@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitLab, dune_2, ocamlPackages }:
+{ lib, stdenv, fetchFromGitLab, dune_3, ocamlPackages }:
 
 stdenv.mkDerivation {
 
@@ -15,10 +15,10 @@ stdenv.mkDerivation {
 
   strictDeps = true;
 
-  nativeBuildInputs = with ocamlPackages; [ menhir ocaml findlib dune_2 ];
+  nativeBuildInputs = with ocamlPackages; [ menhir ocaml findlib dune_3 ];
 
   buildInputs = with ocamlPackages; [
-    ansiterminal cairo2 cmdliner fmt logs menhirLib mtime sedlex yojson
+    ansiterminal cairo2 cmdliner fmt logs menhirLib mtime_1 sedlex yojson
   ];
 
   buildPhase = ''

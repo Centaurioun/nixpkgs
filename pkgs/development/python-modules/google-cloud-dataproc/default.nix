@@ -2,6 +2,7 @@
 , buildPythonPackage
 , fetchPypi
 , google-api-core
+, grpc-google-iam-v1
 , mock
 , libcst
 , proto-plus
@@ -13,18 +14,19 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-dataproc";
-  version = "5.3.0";
+  version = "5.5.0";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-iuhXfFp6cfDNDtk3JS+U8YbQAOII0khY2bmvP75QAP4=";
+    hash = "sha256-XYjEmBMCkCUxKvAF2KNXwG72C6TMszLikFvLtnjJf14=";
   };
 
   propagatedBuildInputs = [
     google-api-core
+    grpc-google-iam-v1
     libcst
     proto-plus
     protobuf
@@ -51,6 +53,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/googleapis/python-dataproc";
     changelog = "https://github.com/googleapis/python-dataproc/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = with maintainers; [ ];
   };
 }

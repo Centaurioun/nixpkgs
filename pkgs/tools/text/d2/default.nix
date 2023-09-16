@@ -2,27 +2,30 @@
 , buildGoModule
 , fetchFromGitHub
 , installShellFiles
+, git
 , testers
 , d2
 }:
 
 buildGoModule rec {
   pname = "d2";
-  version = "0.2.2";
+  version = "0.6.0";
 
   src = fetchFromGitHub {
     owner = "terrastruct";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-CBDZNqYtQElXWmf+oMS7NKpWZG3aD0UTLM1efNg9gFg=";
+    hash = "sha256-MF8RqwoMc48JYgNUJTQKHlGl59xyHOALnFL2BWQAl24=";
   };
 
-  vendorHash = "sha256-WwLPC3hS5yyySwNg62deQrryUI0RunW5oShbrFnGAFQ=";
+  vendorHash = "sha256-SocBC/1LrdSQNfcNVa9nnPaq/UvLVIghHlUSJB7ImBk=";
+
+  excludedPackages = [ "./e2etests" ];
 
   ldflags = [
     "-s"
     "-w"
-    "-X oss.terrastruct.com/d2/lib/version.Version=${version}"
+    "-X oss.terrastruct.com/d2/lib/version.Version=v${version}"
   ];
 
   nativeBuildInputs = [ installShellFiles ];
@@ -31,9 +34,17 @@ buildGoModule rec {
     installManPage ci/release/template/man/d2.1
   '';
 
-  subPackages = [ "." ];
+  nativeCheckInputs = [ git ];
 
-  passthru.tests.version = testers.testVersion { package = d2; };
+  preCheck = ''
+    # See https://github.com/terrastruct/d2/blob/master/docs/CONTRIBUTING.md#running-tests.
+    export TESTDATA_ACCEPT=1
+  '';
+
+  passthru.tests.version = testers.testVersion {
+    package = d2;
+    version = "v${version}";
+  };
 
   meta = with lib; {
     description = "A modern diagram scripting language that turns text to diagrams";

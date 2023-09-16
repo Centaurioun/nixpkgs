@@ -13,16 +13,16 @@
 
 buildPythonPackage rec {
   pname = "dissect-hypervisor";
-  version = "3.5";
+  version = "3.8";
   format = "pyproject";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "fox-it";
     repo = "dissect.hypervisor";
     rev = "refs/tags/${version}";
-    hash = "sha256-dWaU3v2QcoqVIygeufy0ZYVliBE1tijV3qEsvCOIarM=";
+    hash = "sha256-PTF1PSFsjD9lYa3SLd7329+ZZuSC07tN1GqwOndo8Go=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;
