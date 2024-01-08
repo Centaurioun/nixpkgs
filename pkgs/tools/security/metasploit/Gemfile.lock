@@ -284,7 +284,7 @@ GEM
     net-ssh (7.2.0)
     network_interface (0.0.4)
     nexpose (7.3.0)
-    nio4r (2.5.9)
+    nio4r (2.7.0)
     nokogiri (1.14.5)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
@@ -307,7 +307,7 @@ GEM
       ttfunk
     pg (1.5.3)
     public_suffix (5.0.3)
-    puma (6.3.1)
+    puma (6.4.2)
       nio4r (~> 2.0)
     racc (1.7.1)
     rack (2.2.8)
