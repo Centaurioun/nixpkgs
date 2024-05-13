@@ -3,9 +3,9 @@ GEM
   specs:
     kramdown (2.3.2)
       rexml
-    mini_portile2 (2.8.5)
+    mini_portile2 (2.8.6)
     mustache (0.99.8)
-    nokogiri (1.16.2)
+    nokogiri (1.16.5)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     racc (1.7.3)
