@@ -39,7 +39,9 @@ GEM
     netaddr (2.0.5)
     optimist (3.0.1)
     psych (3.3.2)
-    rexml (3.2.5)
+    rexml (3.3.6)
+      strscan
+    strscan (3.1.0)
 
 PLATFORMS
   ruby
