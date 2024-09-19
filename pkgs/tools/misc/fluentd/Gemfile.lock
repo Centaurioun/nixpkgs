@@ -116,7 +116,7 @@ GEM
       tzinfo-data (~> 1.0)
       webrick (>= 1.4.2, < 1.8.0)
       yajl-ruby (~> 1.0)
-    google-protobuf (3.21.12)
+    google-protobuf (3.25.5)
     http_parser.rb (0.8.0)
     jmespath (1.6.2)
     ltsv (0.1.2)
