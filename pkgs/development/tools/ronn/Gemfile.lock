@@ -9,13 +9,11 @@ GEM
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     racc (1.7.3)
-    rexml (3.3.3)
-      strscan
+    rexml (3.3.9)
     ronn-ng (0.9.1)
       kramdown (~> 2.1)
       mustache (~> 0.7, >= 0.7.0)
       nokogiri (~> 1.9, >= 1.9.0)
-    strscan (3.1.0)
 
 PLATFORMS
   ruby
