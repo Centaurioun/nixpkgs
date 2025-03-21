@@ -64,7 +64,7 @@ GEM
       mustache (~> 1.0)
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
-    nokogiri (1.18.3)
+    nokogiri (1.18.4)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     octicons (19.12.0)
